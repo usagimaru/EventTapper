@@ -24,7 +24,7 @@ open class EventTapWrapper {
 	private let handler: Handler
 	private let evaluationHandler: EvaluationHandler
 	
-	open init?(location: CGEventTapLocation,
+	public init?(location: CGEventTapLocation,
 		  placement: CGEventTapPlacement,
 		  tapOption: CGEventTapOptions,
 		  eventTypes: [CGEventType],
