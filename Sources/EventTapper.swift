@@ -23,7 +23,6 @@ import Cocoa
 
 open class EventTapper: NSObject {
 	
-	public static let shared = EventTapper()
 	public weak var delegate: EventTapperDelegate?
 	
 	public var eventTapHandler: ((_ event: CGEvent) -> Void)?
