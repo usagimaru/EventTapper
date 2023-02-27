@@ -1,3 +1,2 @@
 # EventTapper
-
-A description of this package.
+A Carbon free event-tapping module for keyboard and mouse on macOS (experimental).
