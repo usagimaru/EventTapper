@@ -30,7 +30,11 @@ open class EventTapper: NSObject {
 	
 	private var tapWrappers = [[CGEventType] : EventTapWrapper]()
 	
-	open func tapEvents(for eventTypes: [CGEventType], evaluationHandler: @escaping (_ event: CGEvent) -> Bool) {
+	open func tapEvents(for eventTypes: [CGEventType],
+						location: CGEventTapLocation = .cghidEventTap,
+						placement: CGEventTapPlacement = .headInsertEventTap,
+						tapOption: CGEventTapOptions = .defaultTap,
+						evaluationHandler: @escaping (_ event: CGEvent) -> Bool) {
 		self.tapWrappers[eventTypes]?.removeFromRunLoop()
 		let tapWrapper = EventTapWrapper(location: .cghidEventTap,
 										 placement: .headInsertEventTap,
