@@ -14,8 +14,8 @@ import Cocoa
 
 open class EventTapWrapper {
 	
-	typealias Handler = (CGEventTapProxy, CGEvent) -> ()
-	typealias EvaluationHandler = (EventTapWrapper, CGEvent) -> Bool
+	public typealias Handler = (CGEventTapProxy, CGEvent) -> ()
+	public typealias EvaluationHandler = (EventTapWrapper, CGEvent) -> Bool
 	
 	open private(set) var identifier = UUID()
 	open private(set) var eventTypes = [CGEventType]()
