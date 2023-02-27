@@ -47,10 +47,9 @@ open class EventTapWrapper {
 				let eventTapWrapper = Unmanaged<EventTapWrapper>.fromOpaque(selfPointer!).takeUnretainedValue()
 				let shoudCatch = eventTapWrapper.evaluationHandler(eventTapWrapper, event)
 				
-				eventTapWrapper.handler(tapProxy, event)
-				
-				// CGEventTapOptions.defaultTap にして nil を返すと beep が鳴らなくなるが、キーイベントを全て奪うので扱い注意
+				// Note. CGEventTapOptions.defaultTap にして nil を返すと beep が鳴らなくなるが、キーイベントを全て奪うので扱い注意
 				if shoudCatch == true {
+					eventTapWrapper.handler(tapProxy, event)
 					return nil
 				}
 				return Unmanaged<CGEvent>.passUnretained(event)
