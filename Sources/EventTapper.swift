@@ -1,8 +1,8 @@
 //
 //  EventWatcher.swift
 //
-//  Created by usagimaru on 2017.06.18.
-//  Copyright © 2017 usagimaru. All rights reserved.
+//  Created by usagimaru on 2023.02.27.
+//  Copyright © 2023 usagimaru.
 //
 
 #if os(macOS)

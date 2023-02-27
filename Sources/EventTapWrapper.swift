@@ -1,7 +1,8 @@
 //
 //  EventTapWrapper.swift
 //
-//  Created by usagimaru on 2023/02/25.
+//  Created by usagimaru on 2023.02.25.
+//  Copyright © 2023 usagimaru.
 //
 //  References:
 //  https://stackoverflow.com/questions/9352939/how-can-one-detect-mission-control-or-command-tab-switcher-superseding-ones-pro
