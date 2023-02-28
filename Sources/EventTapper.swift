@@ -50,35 +50,38 @@ open class EventTapper: NSObject {
 			
 			self.eventTapHandler?(event)
 			
-			if event.type == .flagsChanged {
-				self.delegate?.eventTapper?(self, didCatchFlagsChanged: nsevent)
-			}
-			if event.type == .keyDown {
-				self.delegate?.eventTapper?(self, didCatchKeyEvent: nsevent, isDown: true)
-			}
-			if event.type == .keyUp {
-				self.delegate?.eventTapper?(self, didCatchKeyEvent: nsevent, isDown: false)
-			}
-			if event.type == .leftMouseDown {
-				self.delegate?.eventTapper?(self, didCatchLeftMouseClick: nsevent, isDown: true)
-			}
-			if event.type == .leftMouseUp {
-				self.delegate?.eventTapper?(self, didCatchLeftMouseClick: nsevent, isDown: false)
-			}
-			if event.type == .leftMouseDragged {
-				self.delegate?.eventTapper?(self, didCatchLeftMouseDragging: nsevent)
-			}
-			if event.type == .rightMouseDown {
-				self.delegate?.eventTapper?(self, didCatchRightMouseClick: nsevent, isDown: true)
-			}
-			if event.type == .rightMouseUp {
-				self.delegate?.eventTapper?(self, didCatchRightMouseClick: nsevent, isDown: false)
-			}
-			if event.type == .rightMouseDragged {
-				self.delegate?.eventTapper?(self, didCatchRightMouseDragging: nsevent)
-			}
-			if event.type == .mouseMoved {
-				self.delegate?.eventTapper?(self, didCatchMouseMoving: nsevent)
+			switch event.type {
+				case .flagsChanged:
+					self.delegate?.eventTapper?(self, didCatchFlagsChanged: nsevent)
+					
+				case .keyDown:
+					self.delegate?.eventTapper?(self, didCatchKeyEvent: nsevent, isDown: true)
+					
+				case .keyUp:
+					self.delegate?.eventTapper?(self, didCatchKeyEvent: nsevent, isDown: false)
+					
+				case .leftMouseDown:
+					self.delegate?.eventTapper?(self, didCatchLeftMouseClick: nsevent, isDown: true)
+					
+				case .leftMouseUp:
+					self.delegate?.eventTapper?(self, didCatchLeftMouseClick: nsevent, isDown: false)
+					
+				case .leftMouseDragged:
+					self.delegate?.eventTapper?(self, didCatchLeftMouseDragging: nsevent)
+					
+				case .rightMouseDown:
+					self.delegate?.eventTapper?(self, didCatchRightMouseClick: nsevent, isDown: true)
+					
+				case .rightMouseUp:
+					self.delegate?.eventTapper?(self, didCatchRightMouseClick: nsevent, isDown: false)
+					
+				case .rightMouseDragged:
+					self.delegate?.eventTapper?(self, didCatchRightMouseDragging: nsevent)
+					
+				case .mouseMoved:
+					self.delegate?.eventTapper?(self, didCatchMouseMoving: nsevent)
+					
+				case _: ()
 			}
 			
 			self.delegate?.eventTapper?(self, didCatchAnyEvent: nsevent)
