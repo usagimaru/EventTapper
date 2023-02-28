@@ -10,90 +10,93 @@ import Cocoa
 
 @objc public protocol EventTapperDelegate: AnyObject {
 	
-	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchFlagsChanged event: NSEvent)
-	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchKeyEvent event: NSEvent, isDown: Bool)
+	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchFlagsChanged event: NSEvent, tapIdentifier: EventTapWrapper.EventTapID)
+	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchKeyEvent event: NSEvent, isDown: Bool, tapIdentifier: EventTapWrapper.EventTapID)
 	
-	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchLeftMouseClick event: NSEvent, isDown: Bool)
-	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchLeftMouseDragging event: NSEvent)
-	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchRightMouseClick event: NSEvent, isDown: Bool)
-	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchRightMouseDragging event: NSEvent)
-	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchMouseMoving event: NSEvent)
+	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchLeftMouseClick event: NSEvent, isDown: Bool, tapIdentifier: EventTapWrapper.EventTapID)
+	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchLeftMouseDragging event: NSEvent, tapIdentifier: EventTapWrapper.EventTapID)
+	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchRightMouseClick event: NSEvent, isDown: Bool, tapIdentifier: EventTapWrapper.EventTapID)
+	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchRightMouseDragging event: NSEvent, tapIdentifier: EventTapWrapper.EventTapID)
 	
-	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchAnyEvent event: NSEvent)
+	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchMouseMoving event: NSEvent, tapIdentifier: EventTapWrapper.EventTapID)
+	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchAnyEvent event: NSEvent, tapIdentifier: EventTapWrapper.EventTapID)
 	
 }
 
 open class EventTapper: NSObject {
 	
 	public weak var delegate: EventTapperDelegate?
+	public private(set) var tapWrapper: EventTapWrapper? {
+		willSet {
+			tapWrapper?.disableTap()
+		}
+		didSet {
+			tapWrapper?.enableTap()
+		}
+	}
 	
-	public var eventTapHandler: ((_ event: CGEvent) -> Void)?
-	
-	private var tapWrappers = [[CGEventType] : EventTapWrapper]()
-	
-	open func tapEvents(for eventTypes: [CGEventType],
-						location: CGEventTapLocation = .cghidEventTap,
-						placement: CGEventTapPlacement = .headInsertEventTap,
-						tapOption: CGEventTapOptions = .defaultTap,
-						evaluationHandler: @escaping (_ event: CGEvent) -> Bool) {
+	@discardableResult
+	open func tap(for eventTypes: [CGEventType],
+				  location: CGEventTapLocation = .cghidEventTap,
+				  placement: CGEventTapPlacement = .headInsertEventTap,
+				  tapOption: CGEventTapOptions = .defaultTap,
+				  evaluationHandler: @escaping (_ event: CGEvent, _ function: EventTapWrapper.Function) -> Bool) -> EventTapWrapper.EventTapID? {
 		// CGEventTapLocation note:
 		// https://www.monkeybreadsoftware.net/class-cgeventtapmbs.shtml
 		
-		self.tapWrappers[eventTypes]?.removeFromRunLoop()
 		let tapWrapper = EventTapWrapper(location: location,
 										 placement: placement,
 										 tapOption: tapOption,
 										 eventTypes: eventTypes)
-		{ eventTapWrapper, event in
-			evaluationHandler(event)
+		{ eventTapWrapper, event, function in
+			evaluationHandler(event, function)
 			
-		} handler: { eventTapProxy, event in
+		} handler: { eventTapWrapper, event in
 			guard let nsevent = NSEvent(cgEvent: event)
 			else { return }
 			
-			self.eventTapHandler?(event)
+			let tapIdentifier = eventTapWrapper.identifier
 			
 			switch event.type {
 				case .flagsChanged:
-					self.delegate?.eventTapper?(self, didCatchFlagsChanged: nsevent)
+					self.delegate?.eventTapper?(self, didCatchFlagsChanged: nsevent, tapIdentifier: tapIdentifier)
 					
 				case .keyDown:
-					self.delegate?.eventTapper?(self, didCatchKeyEvent: nsevent, isDown: true)
+					self.delegate?.eventTapper?(self, didCatchKeyEvent: nsevent, isDown: true, tapIdentifier: tapIdentifier)
 					
 				case .keyUp:
-					self.delegate?.eventTapper?(self, didCatchKeyEvent: nsevent, isDown: false)
+					self.delegate?.eventTapper?(self, didCatchKeyEvent: nsevent, isDown: false, tapIdentifier: tapIdentifier)
 					
 				case .leftMouseDown:
-					self.delegate?.eventTapper?(self, didCatchLeftMouseClick: nsevent, isDown: true)
+					self.delegate?.eventTapper?(self, didCatchLeftMouseClick: nsevent, isDown: true, tapIdentifier: tapIdentifier)
 					
 				case .leftMouseUp:
-					self.delegate?.eventTapper?(self, didCatchLeftMouseClick: nsevent, isDown: false)
+					self.delegate?.eventTapper?(self, didCatchLeftMouseClick: nsevent, isDown: false, tapIdentifier: tapIdentifier)
 					
 				case .leftMouseDragged:
-					self.delegate?.eventTapper?(self, didCatchLeftMouseDragging: nsevent)
+					self.delegate?.eventTapper?(self, didCatchLeftMouseDragging: nsevent, tapIdentifier: tapIdentifier)
 					
 				case .rightMouseDown:
-					self.delegate?.eventTapper?(self, didCatchRightMouseClick: nsevent, isDown: true)
+					self.delegate?.eventTapper?(self, didCatchRightMouseClick: nsevent, isDown: true, tapIdentifier: tapIdentifier)
 					
 				case .rightMouseUp:
-					self.delegate?.eventTapper?(self, didCatchRightMouseClick: nsevent, isDown: false)
+					self.delegate?.eventTapper?(self, didCatchRightMouseClick: nsevent, isDown: false, tapIdentifier: tapIdentifier)
 					
 				case .rightMouseDragged:
-					self.delegate?.eventTapper?(self, didCatchRightMouseDragging: nsevent)
+					self.delegate?.eventTapper?(self, didCatchRightMouseDragging: nsevent, tapIdentifier: tapIdentifier)
 					
 				case .mouseMoved:
-					self.delegate?.eventTapper?(self, didCatchMouseMoving: nsevent)
+					self.delegate?.eventTapper?(self, didCatchMouseMoving: nsevent, tapIdentifier: tapIdentifier)
 					
 				case _: ()
 			}
 			
-			self.delegate?.eventTapper?(self, didCatchAnyEvent: nsevent)
+			self.delegate?.eventTapper?(self, didCatchAnyEvent: nsevent, tapIdentifier: tapIdentifier)
 		}
 		
-		if let tapWrapper {
-			self.tapWrappers[eventTypes] = tapWrapper
-			tapWrapper.addToRunLoop()
-		}
+		self.tapWrapper = tapWrapper
+		
+		return tapWrapper?.identifier
 	}
 	
 }
