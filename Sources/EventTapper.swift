@@ -101,7 +101,7 @@ open class EventTapper: NSObject {
 public extension EventTapper {
 	
 	/// Simulate key event
-	public static func postKeyEvent(virtualKey: CGKeyCode,
+	static func postKeyEvent(virtualKey: CGKeyCode,
 							 isKeyDown: Bool,
 							 settings: ((_ event: CGEvent) -> (Void))? = nil,
 							 eventSourceStateID: CGEventSourceStateID = .combinedSessionState,
@@ -115,14 +115,14 @@ public extension EventTapper {
 	}
 	
 	/// Simulate key down event
-	public static func postKeyDown(key: CGKeyCode, flags: CGEventFlags = .maskNonCoalesced, keyDown: Bool = true) {
+	static func postKeyDown(key: CGKeyCode, flags: CGEventFlags = .maskNonCoalesced, keyDown: Bool = true) {
 		postKeyEvent(virtualKey: key, isKeyDown: keyDown) { event in
 			event.flags = flags // To override the modifier key being pressed by the user. (Do not insert new flags)
 		}
 	}
 	
 	/// Simulate mouse button event
-	public static func postMouseButtonEvent(mouseType: CGEventType,
+	static func postMouseButtonEvent(mouseType: CGEventType,
 									 mouseButton: CGMouseButton,
 									 position: CGPoint? = nil,
 									 settings: ((_ event: CGEvent) -> (Void))? = nil,
@@ -138,13 +138,13 @@ public extension EventTapper {
 	}
 	
 	/// Simulate primary mouse button click
-	public static func postPrimaryMouseClick() {
+	static func postPrimaryMouseClick() {
 		postMouseButtonEvent(mouseType: .leftMouseDown, mouseButton: .left)
 		postMouseButtonEvent(mouseType: .leftMouseUp, mouseButton: .left)
 	}
 	
 	/// Simulate secondary mouse button click
-	public static func postSecondaryMouseClick() {
+	static func postSecondaryMouseClick() {
 		postMouseButtonEvent(mouseType: .rightMouseDown, mouseButton: .right)
 		postMouseButtonEvent(mouseType: .rightMouseUp, mouseButton: .right)
 	}
