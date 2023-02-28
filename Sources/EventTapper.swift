@@ -36,6 +36,9 @@ open class EventTapper: NSObject {
 						placement: CGEventTapPlacement = .headInsertEventTap,
 						tapOption: CGEventTapOptions = .defaultTap,
 						evaluationHandler: @escaping (_ event: CGEvent) -> Bool) {
+		// CGEventTapLocation note:
+		// https://www.monkeybreadsoftware.net/class-cgeventtapmbs.shtml
+		
 		self.tapWrappers[eventTypes]?.removeFromRunLoop()
 		let tapWrapper = EventTapWrapper(location: location,
 										 placement: placement,
