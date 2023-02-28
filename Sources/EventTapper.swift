@@ -10,14 +10,16 @@ import Cocoa
 
 @objc public protocol EventTapperDelegate: AnyObject {
 	
-	@objc optional func eventTapperDidCatchFlagsChanged(event: NSEvent)
-	@objc optional func eventTapperDidCatchKeyEvent(event: NSEvent, isDown: Bool)
+	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchFlagsChanged event: NSEvent)
+	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchKeyEvent event: NSEvent, isDown: Bool)
 	
-	@objc optional func eventTapperDidCatchLeftMouseEvent(event: NSEvent, isDown: Bool)
-	@objc optional func eventTapperDidCatchLeftMouseDraggedEvent(event: NSEvent)
-	@objc optional func eventTapperDidCatchRightMouseEvent(event: NSEvent, isDown: Bool)
-	@objc optional func eventTapperDidCatchRightMouseDraggedEvent(event: NSEvent)
-	@objc optional func eventTapperDidCatchMouseMoved(event: NSEvent)
+	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchLeftMouseClick event: NSEvent, isDown: Bool)
+	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchLeftMouseDragging event: NSEvent)
+	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchRightMouseClick event: NSEvent, isDown: Bool)
+	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchRightMouseDragging event: NSEvent)
+	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchMouseMoving event: NSEvent)
+	
+	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchAnyEvent event: NSEvent)
 	
 }
 
@@ -35,9 +37,9 @@ open class EventTapper: NSObject {
 						tapOption: CGEventTapOptions = .defaultTap,
 						evaluationHandler: @escaping (_ event: CGEvent) -> Bool) {
 		self.tapWrappers[eventTypes]?.removeFromRunLoop()
-		let tapWrapper = EventTapWrapper(location: .cghidEventTap,
-										 placement: .headInsertEventTap,
-										 tapOption: .defaultTap,
+		let tapWrapper = EventTapWrapper(location: location,
+										 placement: placement,
+										 tapOption: tapOption,
 										 eventTypes: eventTypes)
 		{ eventTapWrapper, event in
 			evaluationHandler(event)
@@ -49,35 +51,37 @@ open class EventTapper: NSObject {
 			self.eventTapHandler?(event)
 			
 			if event.type == .flagsChanged {
-				self.delegate?.eventTapperDidCatchFlagsChanged?(event: nsevent)
+				self.delegate?.eventTapper?(self, didCatchFlagsChanged: nsevent)
 			}
 			if event.type == .keyDown {
-				self.delegate?.eventTapperDidCatchKeyEvent?(event: nsevent, isDown: true)
+				self.delegate?.eventTapper?(self, didCatchKeyEvent: nsevent, isDown: true)
 			}
 			if event.type == .keyUp {
-				self.delegate?.eventTapperDidCatchKeyEvent?(event: nsevent, isDown: false)
+				self.delegate?.eventTapper?(self, didCatchKeyEvent: nsevent, isDown: false)
 			}
 			if event.type == .leftMouseDown {
-				self.delegate?.eventTapperDidCatchLeftMouseEvent?(event: nsevent, isDown: true)
+				self.delegate?.eventTapper?(self, didCatchLeftMouseClick: nsevent, isDown: true)
 			}
 			if event.type == .leftMouseUp {
-				self.delegate?.eventTapperDidCatchLeftMouseEvent?(event: nsevent, isDown: false)
+				self.delegate?.eventTapper?(self, didCatchLeftMouseClick: nsevent, isDown: false)
 			}
 			if event.type == .leftMouseDragged {
-				self.delegate?.eventTapperDidCatchLeftMouseDraggedEvent?(event: nsevent)
+				self.delegate?.eventTapper?(self, didCatchLeftMouseDragging: nsevent)
 			}
 			if event.type == .rightMouseDown {
-				self.delegate?.eventTapperDidCatchRightMouseEvent?(event: nsevent, isDown: true)
+				self.delegate?.eventTapper?(self, didCatchRightMouseClick: nsevent, isDown: true)
 			}
 			if event.type == .rightMouseUp {
-				self.delegate?.eventTapperDidCatchRightMouseEvent?(event: nsevent, isDown: false)
+				self.delegate?.eventTapper?(self, didCatchRightMouseClick: nsevent, isDown: false)
 			}
 			if event.type == .rightMouseDragged {
-				self.delegate?.eventTapperDidCatchRightMouseDraggedEvent?(event: nsevent)
+				self.delegate?.eventTapper?(self, didCatchRightMouseDragging: nsevent)
 			}
 			if event.type == .mouseMoved {
-				self.delegate?.eventTapperDidCatchMouseMoved?(event: nsevent)
+				self.delegate?.eventTapper?(self, didCatchMouseMoving: nsevent)
 			}
+			
+			self.delegate?.eventTapper?(self, didCatchAnyEvent: nsevent)
 		}
 		
 		if let tapWrapper {
