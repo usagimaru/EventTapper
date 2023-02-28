@@ -26,6 +26,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, EventTapperDelegate {
 	private var eventTapperPassive = EventTapper()
 
 	func applicationDidFinishLaunching(_ aNotification: Notification) {
+		// Try to get the accessibility_access.
 		AccessibilityAuthorization.askAccessibilityAccessIfNeeded()
 		AccessibilityAuthorization.pollAccessibilityAccessTrusted { [self] in
 			tapEvents()
@@ -36,68 +37,85 @@ class AppDelegate: NSObject, NSApplicationDelegate, EventTapperDelegate {
 	
 	// MARK: -
 	
+	/// Tap events
 	private func tapEvents() {
-		// Handle with delegate method
+		// EventTapperDelegate
 		self.eventTapperActive.delegate = self
 		
+		// Target event types
 		let eventTypes: [CGEventType] = [
 			.flagsChanged,
 			.keyDown,
 		]
 		
 		self.eventTapperActive.tap(for: eventTypes) { event, function in
+			// Check the `function` parameter (as EventTapWrapper.Function) to evaluate which events to pass to Handler
+			// or whether to dispatch caught events to the system.
+			// When `function == .shouldHandle` in this closure, returning true does handle the event.
+			// When `function == .shouldStopDispatching` in this closure, returning true does stop the event dispatching.
+			
 			guard let nsevent = NSEvent(cgEvent: event)
 			else { return false }
 			
+			let modifiers = nsevent.modifierFlags.intersection(.deviceIndependentFlagsMask)
+			
 			switch event.type {
+				case .flagsChanged: ()
+					
 				case .keyDown:
-					let flags_command = nsevent.modifierFlags
-						.intersection(.deviceIndependentFlagsMask)
-						.contains(.command)
+					let command = modifiers.contains(.command)
+					let option = modifiers.contains(.option)
+					let option_command = modifiers.contains([.command, .option])
+					let control = modifiers.contains(.control)
 					
-					// ⌘K
-					if nsevent.charactersIgnoringModifiers == "k" && flags_command {
-						print("☎️ Timestamp: \(event.timestamp), Override [ ⌘K ]")
+					// ⌥⌘D
+					if nsevent.charactersIgnoringModifiers == "d" && option_command {
+						// These are print twice, which is the correct.
+						print("☎️ \(event.timestamp) evaluate [ ⌥⌘D ], function: \(function)")
 						return true
 					}
-					
-					// ⌘G
-					if nsevent.charactersIgnoringModifiers == "g" && flags_command {
-						print("☎️ Timestamp: \(event.timestamp), Override [ ⌘G ]")
-						return true
-					}
-					
-					let flags_option_command = nsevent.modifierFlags
-						.intersection(.deviceIndependentFlagsMask)
-						.contains([.command, .option])
 					
 					// ⌥⌘⎋
-					if nsevent.keyCode == KeyCode.escape && flags_option_command {
-						print("☎️ Timestamp: \(event.timestamp), Override [ ⌥⌘⎋ ]")
+					if nsevent.keyCode == KeyCode.escape && option_command {
+						print("☎️ \(event.timestamp) evaluate [ ⌥⌘⎋ ], function: \(function)")
 						return true
 					}
 					
 					// ⌘⎋
-					if nsevent.keyCode == KeyCode.escape && flags_command {
-						print("☎️ Timestamp: \(event.timestamp), Override [ ⌘⎋ ]")
+					if nsevent.keyCode == KeyCode.escape && command {
+						print("☎️ \(event.timestamp) evaluate [ ⌘⎋ ], function: \(function)")
 						return true
 					}
 					
-					// ⌥⌘D
-					if nsevent.charactersIgnoringModifiers == "d" && flags_option_command {
-						print("☎️ Timestamp: \(event.timestamp), Override [ ⌥⌘D ]")
+					// ⌘K
+					if nsevent.charactersIgnoringModifiers == "k" && command {
+						print("☎️ \(event.timestamp) evaluate [ ⌘K ], function: \(function)")
+						// Catch the event and stop dispatching.
+						return true
+					}
+					
+					// ⌃G
+					if nsevent.charactersIgnoringModifiers == "g" && control {
+						print("☎️ \(event.timestamp) evaluate [ ⌃G ], function: \(function)")
+						return true
+					}
+					
+					// ⌥Space
+					if nsevent.keyCode == KeyCode.space && option {
+						print("☎️ \(event.timestamp) evaluate [ ⌥Space ], function: \(function)")
 						return true
 					}
 					
 				case _: ()
 			}
 			
+			// Don't dispatch any events to the system or don't handle other unchecked events.
 			return false
 		}
 	}
 	
+	/// Listen only
 	private func listenEvents() {
-		// Handle with delegate method
 		self.eventTapperPassive.delegate = self
 		
 		let eventTypes: [CGEventType] = [
@@ -111,27 +129,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, EventTapperDelegate {
 		
 		self.eventTapperPassive.tap(for: eventTypes,
 									location: .cghidEventTap,
-									placement: .tailAppendEventTap,
+									placement: .headInsertEventTap,
 									tapOption: .listenOnly) { event, function in
 			if function == .shouldHandle {
 				return true
 			}
 			
-			// Don't dispatch an event to the system
+			// Don't dispatch an event to the system.
 			return false
 		}
 	}
 	
-	func applicationWillTerminate(_ aNotification: Notification) {
-		// Insert code here to tear down your application
-	}
-	
-	func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
-		return true
-	}
-	
 	
 	// MARK: - EventTapperDelegate
+	// Implement any processes here.
 	
 	func eventTapper(_ eventTapper: EventTapper, didCatchFlagsChanged event: NSEvent, tapIdentifier: EventTapWrapper.EventTapID) {
 		print("modifier keys: \(event)")
@@ -172,6 +183,4 @@ struct KeyCode {
 	
 	static let space = CGKeyCode(0x31)
 	static let escape = CGKeyCode(0x35)
-	static let eisu = CGKeyCode(0x66)
-	static let kana = CGKeyCode(0x68)
 }
