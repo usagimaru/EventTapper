@@ -65,8 +65,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, EventTapperDelegate {
 				case .keyDown:
 					let command = modifiers.contains(.command)
 					let option = modifiers.contains(.option)
-					let option_command = modifiers.contains([.command, .option])
 					let control = modifiers.contains(.control)
+					let option_command = modifiers.contains([.option, .command])
+					let shift_command = modifiers.contains([.shift, .command])
 					
 					// ⌥⌘D
 					if nsevent.charactersIgnoringModifiers == "d" && option_command {
@@ -76,19 +77,25 @@ class AppDelegate: NSObject, NSApplicationDelegate, EventTapperDelegate {
 					}
 					
 					// ⌥⌘⎋
-					if nsevent.keyCode == KeyCode.escape && option_command {
+					if event.keyCode == KeyCode.escape && option_command {
 						print("☎️ \(event.timestamp) evaluate [ ⌥⌘⎋ ], function: \(function)")
 						return true
 					}
 					
+					// ⇧⌘⇥
+					if event.keyCode == KeyCode.tab && shift_command {
+						print("☎️ \(event.timestamp) evaluate [ ⇧⌘⇥ ], function: \(function)")
+						return true
+					}
+					
 					// ⌘⎋
-					if nsevent.keyCode == KeyCode.escape && command {
+					if event.keyCode == KeyCode.escape && command {
 						print("☎️ \(event.timestamp) evaluate [ ⌘⎋ ], function: \(function)")
 						return true
 					}
 					
 					// ⌘K
-					if nsevent.charactersIgnoringModifiers == "k" && command {
+					if event.keyCharacter == "k" && command {
 						print("☎️ \(event.timestamp) evaluate [ ⌘K ], function: \(function)")
 						// Catch the event and stop dispatching.
 						return true
@@ -101,7 +108,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, EventTapperDelegate {
 					}
 					
 					// ⌥Space
-					if nsevent.keyCode == KeyCode.space && option {
+					if event.keyCode == KeyCode.space && option {
 						print("☎️ \(event.timestamp) evaluate [ ⌥Space ], function: \(function)")
 						return true
 					}
@@ -181,6 +188,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, EventTapperDelegate {
 struct KeyCode {
 	// Key codes from Carbon HIToolbox/Events.h
 	
+	static let tab = CGKeyCode(0x30)
 	static let space = CGKeyCode(0x31)
 	static let escape = CGKeyCode(0x35)
 }
