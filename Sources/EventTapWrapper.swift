@@ -27,6 +27,9 @@ open class EventTapWrapper {
 	public typealias EvaluationHandler = (EventTapWrapper, CGEvent, Function) -> Bool
 	public typealias Handler = (EventTapWrapper, CGEvent) -> ()
 	
+	public var activatesTapAtTimeoutAutomatically: Bool = true
+	public var activatesTapAtUserInputAutomatically: Bool = true
+	
 	open private(set) var identifier: EventTapID = UUID()
 	open private(set) var eventTypes = [CGEventType]()
 	open private(set) var tap: CFMachPort?
@@ -51,15 +54,20 @@ open class EventTapWrapper {
 			var shouldProcess = true
 			
 			// Re-enable the tap if it is disabled.
-			if let tap = eventTapWrapper.tap,
-			   (eventType == .tapDisabledByTimeout ||
-				eventType == .tapDisabledByUserInput)
-			{
-				CGEvent.tapEnable(tap: tap, enable: true)
-				eventTapWrapper.debug_print()
-				shouldProcess = false
+			if let tap = eventTapWrapper.tap {
+				if eventTapWrapper.activatesTapAtTimeoutAutomatically == true,
+				   eventType == .tapDisabledByTimeout {
+					CGEvent.tapEnable(tap: tap, enable: true)
+					eventTapWrapper.debug_print()
+					shouldProcess = false
+				}
+				if eventTapWrapper.activatesTapAtUserInputAutomatically == true,
+				   eventType == .tapDisabledByUserInput {
+					CGEvent.tapEnable(tap: tap, enable: true)
+					eventTapWrapper.debug_print()
+					shouldProcess = false
+				}
 			}
-			
 			// Evaluate 1
 			let shoudHandle = eventTapWrapper.evaluationHandler(eventTapWrapper, event, .shouldHandle)
 			if shoudHandle == false {
