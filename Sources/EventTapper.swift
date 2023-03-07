@@ -40,6 +40,7 @@ open class EventTapper: NSObject {
 				  location: CGEventTapLocation = .cghidEventTap,
 				  placement: CGEventTapPlacement = .headInsertEventTap,
 				  tapOption: CGEventTapOptions = .defaultTap,
+				  setup: ((_ tapWrapper: EventTapWrapper) -> Void)? = nil,
 				  evaluationHandler: @escaping (_ event: CGEvent, _ function: EventTapWrapper.Function) -> Bool) -> EventTapWrapper.EventTapID? {
 		// CGEventTapLocation note:
 		// https://www.monkeybreadsoftware.net/class-cgeventtapmbs.shtml
@@ -94,6 +95,9 @@ open class EventTapper: NSObject {
 			self.delegate?.eventTapper?(self, didCatchAnyEvent: nsevent, tapIdentifier: tapIdentifier)
 		}
 		
+		if let tapWrapper {
+			setup?(tapWrapper)
+		}
 		self.tapWrapper = tapWrapper
 		
 		return tapWrapper?.identifier
