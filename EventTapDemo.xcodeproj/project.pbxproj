@@ -20,7 +20,7 @@
 
 /* Begin PBXFileReference section */
 		513F1FEC29B43D9100B3433E /* CGEvent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CGEvent.swift; sourceTree = "<group>"; };
-		51AB1ADF2B38F924001850EE /* ReservedKeyEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReservedKeyEvent.swift; sourceTree = "<group>"; };
+		51AB1ADF2B38F924001850EE /* ReservedKeyEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ReservedKeyEvent.swift; path = Sources/ReservedKeyEvent.swift; sourceTree = "<group>"; };
 		51AC063C29AE35B700F1D838 /* EventTapDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EventTapDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		51AC063F29AE35B700F1D838 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		51AC064329AE35B800F1D838 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
