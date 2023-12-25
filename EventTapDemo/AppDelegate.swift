@@ -29,7 +29,32 @@ class AppDelegate: NSObject, NSApplicationDelegate, EventTapperDelegate {
 		// Try to get the accessibility_access.
 		AccessibilityAuthorization.askAccessibilityAccessIfNeeded()
 		AccessibilityAuthorization.pollAccessibilityAccessTrusted { [self] in
-			tapEvents()
+			start()
+		}
+	}
+	
+	func start() {
+		if AccessibilityAuthorization.isAccessibilityAccessTrusted() {
+			// Type A
+			tapKeyEvents(reservedKeyEvents: [
+				ReservedKeyEvent(modifierFlags: [.option, .command], character: "1"),
+				ReservedKeyEvent(tappingPoint: .keyDown, modifierFlags: [.control, .command], character: "2"),
+				ReservedKeyEvent(tappingPoint: .keyUp, modifierFlags: [.control, .command], character: "2"),
+				ReservedKeyEvent(flagsChanged: [.command]),
+				ReservedKeyEvent(customEvaluator: { event in
+					// Do not return `true` when event.type == .flagsChanged
+					
+					if event.type == .keyDown {
+						return event.modifierFlags.contains(.command) && event.charactersIgnoringModifiers == "k"
+					}
+					return false
+				}),
+			])
+			
+			// Type B
+			//tapEvents()
+			
+			// Type C
 			//listenEvents()
 		}
 	}
@@ -40,7 +65,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, EventTapperDelegate {
 	/// Tap events
 	private func tapEvents() {
 		// EventTapperDelegate
-		self.eventTapperActive.delegate = self
+		eventTapperActive.delegate = self
 		
 		// Target event types
 		let eventTypes: [CGEventType] = [
@@ -48,7 +73,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, EventTapperDelegate {
 			.keyDown,
 		]
 		
-		self.eventTapperActive.tap(for: eventTypes) { event, function in
+		eventTapperActive.tap(for: eventTypes) { event, function in
 			// Check the `function` parameter (as EventTapWrapper.Function) to evaluate which events to pass to Handler
 			// or whether to dispatch caught events to the system.
 			// When `function == .shouldHandle` in this closure, returning true does handle the event.
@@ -121,9 +146,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, EventTapperDelegate {
 		}
 	}
 	
+	
+	/// Tap events
+	private func tapKeyEvents(_ setup: ((EventTapWrapper) -> Void)? = nil, reservedKeyEvents: [ReservedKeyEvent]) {
+		// EventTapperDelegate
+		eventTapperActive.delegate = self
+		// Tap key events with ReservedKeyEvent
+		eventTapperActive.keyTap(setup: setup, reservedKeyEvents: reservedKeyEvents)
+	}
+	
 	/// Listen only
 	private func listenEvents() {
-		self.eventTapperPassive.delegate = self
+		eventTapperPassive.delegate = self
 		
 		let eventTypes: [CGEventType] = [
 			.flagsChanged,
@@ -134,7 +168,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, EventTapperDelegate {
 			.leftMouseDragged,
 		]
 		
-		self.eventTapperPassive.tap(for: eventTypes,
+		eventTapperPassive.tap(for: eventTypes,
 									location: .cghidEventTap,
 									placement: .headInsertEventTap,
 									tapOption: .listenOnly) { event, function in

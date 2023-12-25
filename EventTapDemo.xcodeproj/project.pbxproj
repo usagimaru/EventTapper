@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		513F1FED29B43D9100B3433E /* CGEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 513F1FEC29B43D9100B3433E /* CGEvent.swift */; };
+		51AB1AE02B38F924001850EE /* ReservedKeyEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51AB1ADF2B38F924001850EE /* ReservedKeyEvent.swift */; };
 		51AC064029AE35B700F1D838 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51AC063F29AE35B700F1D838 /* AppDelegate.swift */; };
 		51AC064429AE35B800F1D838 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 51AC064329AE35B800F1D838 /* Assets.xcassets */; };
 		51AC064729AE35B800F1D838 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 51AC064529AE35B800F1D838 /* Main.storyboard */; };
@@ -19,6 +20,7 @@
 
 /* Begin PBXFileReference section */
 		513F1FEC29B43D9100B3433E /* CGEvent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CGEvent.swift; sourceTree = "<group>"; };
+		51AB1ADF2B38F924001850EE /* ReservedKeyEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReservedKeyEvent.swift; sourceTree = "<group>"; };
 		51AC063C29AE35B700F1D838 /* EventTapDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EventTapDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		51AC063F29AE35B700F1D838 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		51AC064329AE35B800F1D838 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -77,6 +79,7 @@
 				51AC065D29AE392000F1D838 /* EventTapper.swift */,
 				51AC065E29AE392000F1D838 /* EventTapWrapper.swift */,
 				51AC065F29AE392000F1D838 /* EventWatcher.swift */,
+				51AB1ADF2B38F924001850EE /* ReservedKeyEvent.swift */,
 			);
 			name = EventTapper;
 			sourceTree = "<group>";
@@ -174,6 +177,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				513F1FED29B43D9100B3433E /* CGEvent.swift in Sources */,
+				51AB1AE02B38F924001850EE /* ReservedKeyEvent.swift in Sources */,
 				51AC066129AE392000F1D838 /* EventTapWrapper.swift in Sources */,
 				51AC064029AE35B700F1D838 /* AppDelegate.swift in Sources */,
 				51AC066029AE392000F1D838 /* EventTapper.swift in Sources */,
@@ -318,7 +322,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -348,7 +352,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;

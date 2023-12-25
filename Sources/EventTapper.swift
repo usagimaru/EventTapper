@@ -103,6 +103,31 @@ open class EventTapper: NSObject {
 		return tapWrapper?.identifier
 	}
 	
+	@discardableResult
+	open func keyTap(location: CGEventTapLocation = .cghidEventTap,
+					 placement: CGEventTapPlacement = .headInsertEventTap,
+					 tapOption: CGEventTapOptions = .defaultTap,
+					 setup: ((_ tapWrapper: EventTapWrapper) -> Void)? = nil,
+					 reservedKeyEvents: [ReservedKeyEvent]) -> EventTapWrapper.EventTapID? {
+		tap(for: [.keyDown, .keyUp, .flagsChanged],
+			location: location,
+			placement: placement,
+			tapOption: tapOption,
+			setup: setup) { event, function in
+			
+			guard let nsevent = NSEvent(cgEvent: event)
+			else { return false }
+			
+			for revent in reservedKeyEvents {
+				if revent.evaluate(with: nsevent) {
+					return true
+				}
+			}
+			
+			return false
+		}
+	}
+	
 }
 
 
@@ -160,4 +185,13 @@ public extension EventTapper {
 	}
 	
 }
+
+extension NSEvent.ModifierFlags {
+	/// Remove device flags
+	var _plainFlags: NSEvent.ModifierFlags {
+		self.intersection(.deviceIndependentFlagsMask)
+			.subtracting([.capsLock, .numericPad, .function])
+	}
+}
+
 #endif
