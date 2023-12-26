@@ -37,10 +37,27 @@ class AppDelegate: NSObject, NSApplicationDelegate, EventTapperDelegate {
 		if AccessibilityAuthorization.isAccessibilityAccessTrusted() {
 			// Type A
 			tapKeyEvents(reservedKeyEvents: [
-				ReservedKeyEvent(modifierFlags: [.option, .command], character: "1"),
-				ReservedKeyEvent(tappingPoint: .keyDown, modifierFlags: [.control, .command], character: "2"),
-				ReservedKeyEvent(tappingPoint: .keyUp, modifierFlags: [.control, .command], character: "2"),
-				ReservedKeyEvent(flagsChanged: [.command]),
+				// Option-Command-1
+				ReservedKeyEvent(keyRepresentation: KeyRepresentation(character: "1", modifierFlags: [.option, .command])),
+				
+				// Command-Escape
+				ReservedKeyEvent(keyRepresentation: KeyRepresentation(keyCode: KeyCode.escape, modifierFlags: .command)),
+				
+				// Control-Command-2 on key down / key up
+				ReservedKeyEvent(tappingPoint: .keyDown, keyRepresentation: KeyRepresentation(character: "2", modifierFlags: [.control, .command])),
+				ReservedKeyEvent(tappingPoint: .keyUp, keyRepresentation: KeyRepresentation(character: "2", modifierFlags: [.control, .command])),
+				
+				// Command and Fn (Globe)
+				ReservedKeyEvent(keyRepresentation: KeyRepresentation(onlyModifierFlags: .command)),
+				ReservedKeyEvent(keyRepresentation: KeyRepresentation(onlyModifierFlags: .function)),
+				
+				// Arrow keys
+				ReservedKeyEvent(keyRepresentation: KeyRepresentation(specialKey: .downArrow, modifierFlags: nil)),
+				ReservedKeyEvent(keyRepresentation: KeyRepresentation(specialKey: .upArrow, modifierFlags: nil)),
+				ReservedKeyEvent(keyRepresentation: KeyRepresentation(specialKey: .leftArrow, modifierFlags: .control)),
+				ReservedKeyEvent(keyRepresentation: KeyRepresentation(specialKey: .rightArrow, modifierFlags: .option)),
+				
+				// Custom evaluation (Command-K)
 				ReservedKeyEvent(customEvaluator: { event in
 					// Do not return `true` when event.type == .flagsChanged
 					
@@ -82,7 +99,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, EventTapperDelegate {
 			guard let nsevent = NSEvent(cgEvent: event)
 			else { return false }
 			
-			let modifiers = nsevent.modifierFlags.intersection(.deviceIndependentFlagsMask)
+			//let modifiers = nsevent.modifierFlags.intersection(.deviceIndependentFlagsMask)
+			let modifiers = nsevent.modifierFlags._plainFlags
 			
 			switch event.type {
 				case .flagsChanged: ()
@@ -169,9 +187,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, EventTapperDelegate {
 		]
 		
 		eventTapperPassive.tap(for: eventTypes,
-									location: .cghidEventTap,
-									placement: .headInsertEventTap,
-									tapOption: .listenOnly) { event, function in
+							   location: .cghidEventTap,
+							   placement: .headInsertEventTap,
+							   tapOption: .listenOnly) { event, function in
 			if function == .shouldHandle {
 				return true
 			}
@@ -217,12 +235,4 @@ class AppDelegate: NSObject, NSApplicationDelegate, EventTapperDelegate {
 		
 	}
 
-}
-
-struct KeyCode {
-	// Key codes from Carbon HIToolbox/Events.h
-	
-	static let tab = CGKeyCode(0x30)
-	static let space = CGKeyCode(0x31)
-	static let escape = CGKeyCode(0x35)
 }

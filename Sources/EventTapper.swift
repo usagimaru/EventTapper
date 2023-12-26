@@ -119,7 +119,7 @@ open class EventTapper: NSObject {
 			else { return false }
 			
 			for revent in reservedKeyEvents {
-				if revent.evaluate(with: nsevent) {
+				if revent.evaluate(with: nsevent) && function == .shouldHandle {
 					return true
 				}
 			}
