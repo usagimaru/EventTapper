@@ -50,7 +50,7 @@ open class EventWatcher: NSObject {
 	open func watchEvent(for mask: NSEvent.EventTypeMask) {
 		stopWatching()
 		
-		func handler(event: NSEvent, isGlobalEvent: Bool) {
+		func eventHandler(event: NSEvent, isGlobalEvent: Bool) {
 			self.eventWacherHandler?(event)
 			
 			if event.type == .keyDown {
@@ -89,11 +89,11 @@ open class EventWatcher: NSObject {
 		}
 		
 		self.globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: mask, handler: { (event: NSEvent) in
-			handler(event: event, isGlobalEvent: true)
+			eventHandler(event: event, isGlobalEvent: true)
 		})
 		self.localMonitor = NSEvent.addLocalMonitorForEvents(matching: mask) { (event: NSEvent?) in
 			if let event {
-				handler(event: event, isGlobalEvent: false)
+				eventHandler(event: event, isGlobalEvent: false)
 				// nilを返すとイベントディスパッチを終える
 				return nil
 			}

@@ -35,38 +35,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, EventTapperDelegate {
 	
 	func start() {
 		if AccessibilityAuthorization.isAccessibilityAccessTrusted() {
+			// There are three ways of tapping events
+			
 			// Type A
-			tapKeyEvents(reservedKeyEvents: [
-				// Option-Command-1
-				ReservedKeyEvent(keyRepresentation: KeyRepresentation(character: "1", modifierFlags: [.option, .command])),
-				
-				// Command-Escape
-				ReservedKeyEvent(keyRepresentation: KeyRepresentation(keyCode: KeyCode.escape, modifierFlags: .command)),
-				
-				// Control-Command-2 on key down / key up
-				ReservedKeyEvent(tappingPoint: .keyDown, keyRepresentation: KeyRepresentation(character: "2", modifierFlags: [.control, .command])),
-				ReservedKeyEvent(tappingPoint: .keyUp, keyRepresentation: KeyRepresentation(character: "2", modifierFlags: [.control, .command])),
-				
-				// Command and Fn (Globe)
-				ReservedKeyEvent(keyRepresentation: KeyRepresentation(onlyModifierFlags: .command)),
-				ReservedKeyEvent(keyRepresentation: KeyRepresentation(onlyModifierFlags: .function)),
-				
-				// Arrow keys
-				ReservedKeyEvent(keyRepresentation: KeyRepresentation(specialKey: .downArrow, modifierFlags: nil)),
-				ReservedKeyEvent(keyRepresentation: KeyRepresentation(specialKey: .upArrow, modifierFlags: nil)),
-				ReservedKeyEvent(keyRepresentation: KeyRepresentation(specialKey: .leftArrow, modifierFlags: .control)),
-				ReservedKeyEvent(keyRepresentation: KeyRepresentation(specialKey: .rightArrow, modifierFlags: .option)),
-				
-				// Custom evaluation (Command-K)
-				ReservedKeyEvent(customEvaluator: { event in
-					// Do not return `true` when event.type == .flagsChanged
-					
-					if event.type == .keyDown {
-						return event.modifierFlags.contains(.command) && event.charactersIgnoringModifiers == "k"
-					}
-					return false
-				}),
-			])
+			tapEventsWithReservedKeyEvents()
 			
 			// Type B
 			//tapEvents()
@@ -77,7 +49,51 @@ class AppDelegate: NSObject, NSApplicationDelegate, EventTapperDelegate {
 	}
 	
 	
-	// MARK: -
+	// MARK: - Type A
+	
+	private func tapEventsWithReservedKeyEvents() {
+		tapKeyEvents(reservedKeyEvents: [
+			// Option-Command-1
+			ReservedKeyEvent(keyRepresentation: KeyRepresentation(character: "1", modifierFlags: [.option, .command])),
+			
+			// Command-Escape
+			ReservedKeyEvent(keyRepresentation: KeyRepresentation(keyCode: CGKeyCode.escape, modifierFlags: .command)),
+			
+			// Control-Command-2 on key down / key up
+			ReservedKeyEvent(tappingPoint: .keyDown, keyRepresentation: KeyRepresentation(character: "2", modifierFlags: [.control, .command])),
+			ReservedKeyEvent(tappingPoint: .keyUp, keyRepresentation: KeyRepresentation(character: "2", modifierFlags: [.control, .command])),
+			
+			// Command and Shift
+			ReservedKeyEvent(keyRepresentation: KeyRepresentation(onlyModifierFlags: [.command, .shift])),
+			
+			// Arrow keys
+			ReservedKeyEvent(keyRepresentation: KeyRepresentation(specialKey: .downArrow, modifierFlags:  [.shift, .command])),
+			ReservedKeyEvent(keyRepresentation: KeyRepresentation(specialKey: .upArrow, modifierFlags:  [.shift, .command])),
+			ReservedKeyEvent(keyRepresentation: KeyRepresentation(specialKey: .leftArrow, modifierFlags:  [.shift, .command])),
+			ReservedKeyEvent(keyRepresentation: KeyRepresentation(specialKey: .rightArrow, modifierFlags:  [.shift, .command])),
+			
+			// Custom evaluation (Command-K)
+			ReservedKeyEvent(customEvaluator: { event in
+				// Do not return `true` when event.type == .flagsChanged
+				
+				if event.type == .keyDown {
+					return event.modifierFlags.contains(.command) && event.charactersIgnoringModifiers == "k"
+				}
+				return false
+			}),
+		])
+	}
+	
+	/// Tap events
+	private func tapKeyEvents(_ setup: ((EventTapWrapper) -> Void)? = nil, reservedKeyEvents: [ReservedKeyEvent]) {
+		// EventTapperDelegate
+		eventTapperActive.delegate = self
+		// Tap key events with ReservedKeyEvent
+		eventTapperActive.keyTap(setup: setup, reservedKeyEvents: reservedKeyEvents)
+	}
+	
+	
+	// MARK: - Type B
 	
 	/// Tap events
 	private func tapEvents() {
@@ -91,10 +107,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, EventTapperDelegate {
 		]
 		
 		eventTapperActive.tap(for: eventTypes) { event, function in
-			// Check the `function` parameter (as EventTapWrapper.Function) to evaluate which events to pass to Handler
+			// Check the `function` parameter (as EventTapWrapper.EvaluationFunction) to evaluate which events to pass to EventHandler
 			// or whether to dispatch caught events to the system.
-			// When `function == .shouldHandle` in this closure, returning true does handle the event.
-			// When `function == .shouldStopDispatching` in this closure, returning true does stop the event dispatching.
+			// When `evaluationFunction == .shouldContinueToHandle` in this closure, returning true does handle the event.
+			// When `evaluationFunction == .shouldStopDispatchingToSystem` in this closure, returning true does stop the event dispatching to the system.
 			
 			guard let nsevent = NSEvent(cgEvent: event)
 			else { return false }
@@ -120,19 +136,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, EventTapperDelegate {
 					}
 					
 					// ⌥⌘⎋
-					if event.keyCode == KeyCode.escape && option_command {
+					if event.keyCode == CGKeyCode.escape && option_command {
 						print("☎️ \(event.timestamp) evaluate [ ⌥⌘⎋ ], function: \(function)")
 						return true
 					}
 					
 					// ⇧⌘⇥
-					if event.keyCode == KeyCode.tab && shift_command {
+					if event.keyCode == CGKeyCode.tab && shift_command {
 						print("☎️ \(event.timestamp) evaluate [ ⇧⌘⇥ ], function: \(function)")
 						return true
 					}
 					
 					// ⌘⎋
-					if event.keyCode == KeyCode.escape && command {
+					if event.keyCode == CGKeyCode.escape && command {
 						print("☎️ \(event.timestamp) evaluate [ ⌘⎋ ], function: \(function)")
 						return true
 					}
@@ -151,7 +167,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, EventTapperDelegate {
 					}
 					
 					// ⌥Space
-					if event.keyCode == KeyCode.space && option {
+					if event.keyCode == CGKeyCode.space && option {
 						print("☎️ \(event.timestamp) evaluate [ ⌥Space ], function: \(function)")
 						return true
 					}
@@ -165,13 +181,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, EventTapperDelegate {
 	}
 	
 	
-	/// Tap events
-	private func tapKeyEvents(_ setup: ((EventTapWrapper) -> Void)? = nil, reservedKeyEvents: [ReservedKeyEvent]) {
-		// EventTapperDelegate
-		eventTapperActive.delegate = self
-		// Tap key events with ReservedKeyEvent
-		eventTapperActive.keyTap(setup: setup, reservedKeyEvents: reservedKeyEvents)
-	}
+	// MARK: - Type C
 	
 	/// Listen only
 	private func listenEvents() {
@@ -189,12 +199,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, EventTapperDelegate {
 		eventTapperPassive.tap(for: eventTypes,
 							   location: .cghidEventTap,
 							   placement: .headInsertEventTap,
-							   tapOption: .listenOnly) { event, function in
-			if function == .shouldHandle {
-				return true
+							   tapOptions: .listenOnly) { event, _ in
+			
+			if let nsevent = NSEvent(cgEvent: event), nsevent.type == .keyDown {
+				return nsevent.modifierFlags.contains(.command) && nsevent.charactersIgnoringModifiers == "k"
 			}
 			
-			// Don't dispatch an event to the system.
+			// If tapOptions is `CGEventTapOptions.listenOnly`, evaluation with `shouldStopDispatchingToSystem` is not performed.
 			return false
 		}
 	}
@@ -204,15 +215,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, EventTapperDelegate {
 	// Implement any processes here.
 	
 	func eventTapper(_ eventTapper: EventTapper, didCatchFlagsChanged event: NSEvent, tapIdentifier: EventTapWrapper.EventTapID) {
-		print("modifier keys: \(event)")
+		print("✅ detect modifier keys: \(event)\n")
 	}
 	
 	func eventTapper(_ eventTapper: EventTapper, didCatchKeyEvent event: NSEvent, isDown: Bool, tapIdentifier: EventTapWrapper.EventTapID) {
-		print("key: \(isDown ? "press" : "release") | \(event)")
+		print("✅ detect key combination: \(isDown ? "press" : "release") | \(event)\n")
 	}
 	
 	func eventTapper(_ eventTapper: EventTapper, didCatchLeftMouseClick event: NSEvent, isDown: Bool, tapIdentifier: EventTapWrapper.EventTapID) {
-		print("left mouse click: \(isDown ? "press" : "release")")
+		print("✅ detect left mouse click: \(isDown ? "press" : "release")\n")
 	}
 	
 	func eventTapper(_ eventTapper: EventTapper, didCatchLeftMouseDragging event: NSEvent, tapIdentifier: EventTapWrapper.EventTapID) {

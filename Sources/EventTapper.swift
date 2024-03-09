@@ -39,20 +39,20 @@ open class EventTapper: NSObject {
 	open func tap(for eventTypes: [CGEventType],
 				  location: CGEventTapLocation = .cghidEventTap,
 				  placement: CGEventTapPlacement = .headInsertEventTap,
-				  tapOption: CGEventTapOptions = .defaultTap,
+				  tapOptions: CGEventTapOptions = .defaultTap,
 				  setup: ((_ tapWrapper: EventTapWrapper) -> Void)? = nil,
-				  evaluationHandler: @escaping (_ event: CGEvent, _ function: EventTapWrapper.Function) -> Bool) -> EventTapWrapper.EventTapID? {
+				  evaluationHandler: @escaping (_ event: CGEvent, _ evaluationFunction: EventTapWrapper.EvaluationFunction) -> Bool) -> EventTapWrapper.EventTapID? {
 		// CGEventTapLocation note:
 		// https://www.monkeybreadsoftware.net/class-cgeventtapmbs.shtml
 		
 		let tapWrapper = EventTapWrapper(location: location,
 										 placement: placement,
-										 tapOption: tapOption,
+										 tapOptions: tapOptions,
 										 eventTypes: eventTypes)
-		{ eventTapWrapper, event, function in
-			evaluationHandler(event, function)
+		{ eventTapWrapper, event, evaluationFunction in
+			evaluationHandler(event, evaluationFunction)
 			
-		} handler: { eventTapWrapper, event in
+		} eventHandler: { eventTapWrapper, event in
 			guard let nsevent = NSEvent(cgEvent: event)
 			else { return }
 			
@@ -106,21 +106,32 @@ open class EventTapper: NSObject {
 	@discardableResult
 	open func keyTap(location: CGEventTapLocation = .cghidEventTap,
 					 placement: CGEventTapPlacement = .headInsertEventTap,
-					 tapOption: CGEventTapOptions = .defaultTap,
+					 tapOptions: CGEventTapOptions = .defaultTap,
 					 setup: ((_ tapWrapper: EventTapWrapper) -> Void)? = nil,
 					 reservedKeyEvents: [ReservedKeyEvent]) -> EventTapWrapper.EventTapID? {
 		tap(for: [.keyDown, .keyUp, .flagsChanged],
 			location: location,
 			placement: placement,
-			tapOption: tapOption,
-			setup: setup) { event, function in
+			tapOptions: tapOptions,
+			setup: setup) { event, evaluationFunction in
 			
 			guard let nsevent = NSEvent(cgEvent: event)
 			else { return false }
 			
 			for revent in reservedKeyEvents {
-				if revent.evaluate(with: nsevent) && function == .shouldHandle {
-					return true
+				if revent.evaluate(with: nsevent) {
+					if evaluationFunction == .shouldContinueToHandle {
+#if DEBUG_EVENT_TAPPER
+						print("== Handle this event: \(nsevent)\n")
+#endif
+						return true
+					}
+					if evaluationFunction == .shouldStopDispatchingToSystem {
+#if DEBUG_EVENT_TAPPER
+						print("== Stop event dispatching to the system")
+#endif
+						return true
+					}
 				}
 			}
 			

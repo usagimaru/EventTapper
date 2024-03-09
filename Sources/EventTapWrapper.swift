@@ -16,16 +16,17 @@ import Cocoa
 
 open class EventTapWrapper {
 	
-	public enum Function {
-		/// Determines which events to pass to the Handler. (When returning the true, the event is passed to the Handler.)
-		case shouldHandle
-		/// Determines to release caught events to the system. (When returning the true, the event is not released to the system.)
-		case shouldStopDispatching
+	/// Evaluation types for `EvaluationHandler`
+	public enum EvaluationFunction {
+		/// Determines which events to pass to the Handler. If true is returned from `EvaluationHandler`, the event is passed to the `EventHandler`. If false is returned, the `EventHandler` is not called with `shouldStopDispatchingToSystem`.
+		case shouldContinueToHandle
+		/// Determines to release caught events to the system. If true is returned from `EvaluationHandler`, the event is not passed to the system.
+		case shouldStopDispatchingToSystem
 	}
 	
 	public typealias EventTapID = UUID
-	public typealias EvaluationHandler = (EventTapWrapper, CGEvent, Function) -> Bool
-	public typealias Handler = (EventTapWrapper, CGEvent) -> ()
+	public typealias EvaluationHandler = (EventTapWrapper, CGEvent, EvaluationFunction) -> Bool
+	public typealias EventHandler = (EventTapWrapper, CGEvent) -> ()
 	
 	public var activatesTapAtTimeoutAutomatically: Bool = true
 	public var activatesTapAtUserInputAutomatically: Bool = true
@@ -35,20 +36,25 @@ open class EventTapWrapper {
 	open private(set) var tap: CFMachPort?
 	
 	private var evaluationHandler: EvaluationHandler
-	private var handler: Handler?
+	private var eventHandler: EventHandler?
 	
+	private var tapOptionsOfLastTap: CGEventTapOptions?
+	
+	/// The `EventHandler` may be called once or twice in succession. Each should be judged by `EvaluationFunction` and return how it behaves by Bool.
 	public init?(location: CGEventTapLocation,
 				 placement: CGEventTapPlacement,
-				 tapOption: CGEventTapOptions,
+				 tapOptions: CGEventTapOptions,
 				 eventTypes: [CGEventType],
-				 evaluation: @escaping EvaluationHandler,
-				 handler: Handler?) {
-		self.evaluationHandler = evaluation
-		self.handler = handler
+				 evaluationHandler: @escaping EvaluationHandler,
+				 eventHandler: EventHandler?) {
+		self.evaluationHandler = evaluationHandler
+		self.eventHandler = eventHandler
 		self.eventTypes = eventTypes
+		self.tapOptionsOfLastTap = tapOptions
 		disableTap()
 		self.tap = nil
 		
+		// Callback
 		let callback: CGEventTapCallBack = { tapProxy, eventType, event, selfPointer in
 			let eventTapWrapper = Unmanaged<EventTapWrapper>.fromOpaque(selfPointer!).takeUnretainedValue()
 			var shouldProcess = true
@@ -68,34 +74,45 @@ open class EventTapWrapper {
 					shouldProcess = false
 				}
 			}
-			// Evaluate 1
-			let shoudHandle = eventTapWrapper.evaluationHandler(eventTapWrapper, event, .shouldHandle)
+			// Evaluate 1: First evaluate whether to handle this event. If false is returned, exit without processing.
+			let shoudHandle = eventTapWrapper.evaluationHandler(eventTapWrapper, event, .shouldContinueToHandle)
 			if shoudHandle == false {
 				shouldProcess = false
 			}
 			
 			if shouldProcess == true {
-				// Evaluate 2
-				let shouldStopDispatching = eventTapWrapper.evaluationHandler(eventTapWrapper, event, .shouldStopDispatching)
+				let shouldStopDispatching: Bool
+				if eventTapWrapper.tapOptionsOfLastTap == .defaultTap {
+					// Evaluate 2: Evaluate whether to dispatch this event to the system.
+					shouldStopDispatching = eventTapWrapper.evaluationHandler(eventTapWrapper, event, .shouldStopDispatchingToSystem)
+				}
+				else {
+					// When using tapOptions as `CGEventTapOptions.listenOnly`, do not run Evaluate 2.
+					// Events are always dispatched to the system.
+					shouldStopDispatching = false
+				}
 				
-				// Handle
-				eventTapWrapper.handler?(eventTapWrapper, event)
+				// Handle the event
+				eventTapWrapper.eventHandler?(eventTapWrapper, event)
 				
 				if shouldStopDispatching == true {
+					// Stop the event dispatching.
 					// If nil is not returned, the event dispatching will continue and a system beep may sound.
 					// Then CGEventTapOptions must be `defaultTap`.
 					return nil
 				}
+				
+				// When `shouldStopDispatching == false`, this tapping is listen only.
 			}
 			
-			// The event dispatching will continue.
+			// The event dispatching to the system will continue.
 			return Unmanaged<CGEvent>.passUnretained(event)
 		}
 		let eventMask = eventTypes.reduce(CGEventMask(0), { $0 | (1 << $1.rawValue) })
 		
 		guard let tap = CGEvent.tapCreate(tap: location,
 										  place: placement,
-										  options: tapOption,
+										  options: tapOptions,
 										  eventsOfInterest: eventMask,
 										  callback: callback,
 										  userInfo: Unmanaged<EventTapWrapper>.passUnretained(self).toOpaque())
@@ -105,7 +122,7 @@ open class EventTapWrapper {
 	}
 		
 	private func debug_print() {
-#if DEBUG
+#if DEBUG_EVENT_TAPPER
 		if let tap = self.tap {
 			print(#function, "The tap \(tap) is re-enabled.")
 		}
