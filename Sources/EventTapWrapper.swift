@@ -32,7 +32,6 @@ open class EventTapWrapper {
 	public var activatesTapAtUserInputAutomatically: Bool = true
 	
 	open private(set) var identifier: EventTapID = UUID()
-	open private(set) var eventTypes = [CGEventType]()
 	open private(set) var tap: CFMachPort?
 	
 	private var evaluationHandler: EvaluationHandler
@@ -44,12 +43,11 @@ open class EventTapWrapper {
 	public init?(location: CGEventTapLocation,
 				 placement: CGEventTapPlacement,
 				 tapOptions: CGEventTapOptions,
-				 eventTypes: [CGEventType],
+				 eventMask: CGEventMask,
 				 evaluationHandler: @escaping EvaluationHandler,
 				 eventHandler: EventHandler?) {
 		self.evaluationHandler = evaluationHandler
 		self.eventHandler = eventHandler
-		self.eventTypes = eventTypes
 		self.tapOptionsOfLastTap = tapOptions
 		disableTap()
 		self.tap = nil
@@ -108,7 +106,6 @@ open class EventTapWrapper {
 			// The event dispatching to the system will continue.
 			return Unmanaged<CGEvent>.passUnretained(event)
 		}
-		let eventMask = eventTypes.reduce(CGEventMask(0), { $0 | (1 << $1.rawValue) })
 		
 		guard let tap = CGEvent.tapCreate(tap: location,
 										  place: placement,
@@ -119,6 +116,21 @@ open class EventTapWrapper {
 		else { return nil }
 		
 		self.tap = tap
+	}
+	
+	/// The `EventHandler` may be called once or twice in succession. Each should be judged by `EvaluationFunction` and return how it behaves by Bool.
+	public convenience init?(location: CGEventTapLocation,
+							 placement: CGEventTapPlacement,
+							 tapOptions: CGEventTapOptions,
+							 eventTypes: [CGEventType],
+							 evaluationHandler: @escaping EvaluationHandler,
+							 eventHandler: EventHandler?) {
+		self.init(location: location,
+				  placement: placement,
+				  tapOptions: tapOptions,
+				  eventMask: eventTypes.eventMask,
+				  evaluationHandler: evaluationHandler,
+				  eventHandler: eventHandler)
 	}
 		
 	private func debug_print() {

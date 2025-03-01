@@ -4,13 +4,13 @@
 //  Created by usagimaru on 2023/03/05.
 //
 
-import Foundation
 import CoreGraphics
 
+// References:
+// https://developer.apple.com/documentation/coregraphics/cgeventfield
+// https://www.hammerspoon.org/docs/hs.eventtap.event.html
+
 extension CGEvent {
-	
-	// https://developer.apple.com/documentation/coregraphics/cgeventfield
-	// https://www.hammerspoon.org/docs/hs.eventtap.event.html
 	
 	var sourcePID: Int64 {
 		getIntegerValueField(.eventSourceUnixProcessID)
