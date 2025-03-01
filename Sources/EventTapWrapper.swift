@@ -14,7 +14,9 @@
 #if os(macOS)
 import Cocoa
 
-open class EventTapWrapper {
+
+/// A low-level wrapper for CGEventTap
+public class EventTapWrapper {
 	
 	/// Evaluation types for `EvaluationHandler`
 	public enum EvaluationFunction {
@@ -31,15 +33,23 @@ open class EventTapWrapper {
 	public var activatesTapAtTimeoutAutomatically: Bool = true
 	public var activatesTapAtUserInputAutomatically: Bool = true
 	
-	open private(set) var identifier: EventTapID = UUID()
-	open private(set) var tap: CFMachPort?
+	public private(set) var identifier: EventTapID = UUID()
+	public private(set) var tap: CFMachPort?
 	
 	private var evaluationHandler: EvaluationHandler
 	private var eventHandler: EventHandler?
 	
 	private var tapOptionsOfLastTap: CGEventTapOptions?
 	
-	/// The `EventHandler` may be called once or twice in succession. Each should be judged by `EvaluationFunction` and return how it behaves by Bool.
+	/// - Parameters:
+	///   - location: Event tapping location like `CGEventTapLocation.cghidEventTap`
+	///   - placement: Event insertion location on existing event
+	///   - tapOptions: Specifies that the tap is an active filter (`CGEventTapOptions.defaultTap`) or passive listener (`CGEventTapOptions.listenOnly`)
+	///   - eventMask: Specifies event types like mouseDown, keyUp, and etc. You can use the extension `[CGEventType].eventMask`.
+	///   - evaluationHandler: Evaluate whether to handle the existing event. If false is returned, exit without processing.
+	///   - eventHandler: Handle events as you like.
+	/// - Discussion:
+	///   - The `EventHandler` may be called once or twice in succession. Each should be judged by `EvaluationFunction` and return how it behaves by Bool.
 	public init?(location: CGEventTapLocation,
 				 placement: CGEventTapPlacement,
 				 tapOptions: CGEventTapOptions,
@@ -118,7 +128,6 @@ open class EventTapWrapper {
 		self.tap = tap
 	}
 	
-	/// The `EventHandler` may be called once or twice in succession. Each should be judged by `EvaluationFunction` and return how it behaves by Bool.
 	public convenience init?(location: CGEventTapLocation,
 							 placement: CGEventTapPlacement,
 							 tapOptions: CGEventTapOptions,
@@ -144,7 +153,7 @@ open class EventTapWrapper {
 #endif
 	}
 	
-	open func enableTap(_ runLoop: CFRunLoop = CFRunLoopGetCurrent(), mode: CFRunLoopMode = .commonModes) {
+	public func enableTap(_ runLoop: CFRunLoop = CFRunLoopGetCurrent(), mode: CFRunLoopMode = .commonModes) {
 		if let tap = self.tap {
 			CFRunLoopAddSource(runLoop,
 							   CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0),
@@ -154,7 +163,7 @@ open class EventTapWrapper {
 		}
 	}
 	
-	open func disableTap(_ runLoop: CFRunLoop = CFRunLoopGetCurrent(), mode: CFRunLoopMode = .commonModes) {
+	public func disableTap(_ runLoop: CFRunLoop = CFRunLoopGetCurrent(), mode: CFRunLoopMode = .commonModes) {
 		if let tap = self.tap {
 			CGEvent.tapEnable(tap: tap, enable: false)
 			CFRunLoopRemoveSource(runLoop,

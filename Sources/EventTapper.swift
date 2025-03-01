@@ -23,6 +23,7 @@ import Cocoa
 	
 }
 
+/// A high-level wrapper class for EventTapWrapper
 open class EventTapper: NSObject {
 	
 	public weak var delegate: EventTapperDelegate?
@@ -36,7 +37,7 @@ open class EventTapper: NSObject {
 	}
 	
 	@discardableResult
-	open func tap(for eventTypes: [CGEventType],
+	open func tap(for eventMask: CGEventMask,
 				  location: CGEventTapLocation = .cghidEventTap,
 				  placement: CGEventTapPlacement = .headInsertEventTap,
 				  tapOptions: CGEventTapOptions = .defaultTap,
@@ -48,7 +49,7 @@ open class EventTapper: NSObject {
 		let tapWrapper = EventTapWrapper(location: location,
 										 placement: placement,
 										 tapOptions: tapOptions,
-										 eventTypes: eventTypes)
+										 eventMask: eventMask)
 		{ eventTapWrapper, event, evaluationFunction in
 			evaluationHandler(event, evaluationFunction)
 			
@@ -101,6 +102,21 @@ open class EventTapper: NSObject {
 		self.tapWrapper = tapWrapper
 		
 		return tapWrapper?.identifier
+	}
+	
+	@discardableResult
+	open func tap(for eventTypes: [CGEventType],
+				  location: CGEventTapLocation = .cghidEventTap,
+				  placement: CGEventTapPlacement = .headInsertEventTap,
+				  tapOptions: CGEventTapOptions = .defaultTap,
+				  setup: ((_ tapWrapper: EventTapWrapper) -> Void)? = nil,
+				  evaluationHandler: @escaping (_ event: CGEvent, _ evaluationFunction: EventTapWrapper.EvaluationFunction) -> Bool) -> EventTapWrapper.EventTapID? {
+		tap(for: eventTypes.eventMask,
+			location: location,
+			placement: placement,
+			tapOptions: tapOptions,
+			setup: setup,
+			evaluationHandler: evaluationHandler)
 	}
 	
 	@discardableResult
@@ -195,14 +211,6 @@ public extension EventTapper {
 		postMouseButtonEvent(mouseType: .rightMouseUp, mouseButton: .right)
 	}
 	
-}
-
-extension NSEvent.ModifierFlags {
-	/// Remove device flags
-	var _plainFlags: NSEvent.ModifierFlags {
-		self.intersection(.deviceIndependentFlagsMask)
-			.subtracting([.capsLock, .numericPad, .function])
-	}
 }
 
 #endif

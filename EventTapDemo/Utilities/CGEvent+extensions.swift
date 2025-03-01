@@ -1,5 +1,5 @@
 //
-//  CGEvent.swift
+//  CGEvent+extensions.swift
 //
 //  Created by usagimaru on 2023/03/05.
 //

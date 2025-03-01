@@ -1,9 +1,10 @@
 //
-//  CGKeyCode.swift
+//  FlagExtensions.swift
 //
 //  Created by usagimaru on 2023/12/26.
 //
 
+import Cocoa
 import CoreGraphics
 
 // References:
@@ -41,4 +42,12 @@ public extension CGEventMask {
 	
 	static let trackpadEvents = 1 << 29
 	
+}
+
+extension NSEvent.ModifierFlags {
+	/// Remove device flags
+	var _plainFlags: NSEvent.ModifierFlags {
+		self.intersection(.deviceIndependentFlagsMask)
+			.subtracting([.capsLock, .numericPad, .function])
+	}
 }

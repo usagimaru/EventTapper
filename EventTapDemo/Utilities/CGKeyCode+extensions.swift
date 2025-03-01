@@ -1,5 +1,5 @@
 //
-//  CGKeyCode.swift
+//  CGKeyCode+extensions.swift
 //
 //  Created by usagimaru on 2023/12/26.
 //

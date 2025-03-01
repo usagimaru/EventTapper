@@ -21,6 +21,8 @@ import Cocoa
 	
 }
 
+
+/// Watch events with NSEvent’s monitor methods
 open class EventWatcher: NSObject {
 	
 	public static let shared = EventWatcher()
@@ -94,7 +96,7 @@ open class EventWatcher: NSObject {
 		self.localMonitor = NSEvent.addLocalMonitorForEvents(matching: mask) { (event: NSEvent?) in
 			if let event {
 				eventHandler(event: event, isGlobalEvent: false)
-				// nilを返すとイベントディスパッチを終える
+				// To end event dispatching, return nil here.
 				return nil
 			}
 			return event

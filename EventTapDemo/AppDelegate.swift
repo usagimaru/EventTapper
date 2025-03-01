@@ -8,7 +8,7 @@
 /*
  [Note 1]
  To tap any events, we must have the permission of accessibility_access.
- However, if our app is sandboxed, the system alert dialog for accessibility_access does not appear.
+ However, if the app is sandboxed, the system alert dialog for accessibility_access does not appear.
  In this case, we will probably need to implement that UI on your own.
  It should be noted that apps that use accessibility_access cannot be distributed on the App Store.
  
@@ -27,6 +27,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, EventTapperDelegate {
 
 	func applicationDidFinishLaunching(_ aNotification: Notification) {
 		// Try to get the accessibility_access.
+		// (Need to deactivate sandboxing build setting)
 		AccessibilityAuthorization.askAccessibilityAccessIfNeeded()
 		AccessibilityAuthorization.pollAccessibilityAccessTrusted { [self] in
 			start()
@@ -38,12 +39,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, EventTapperDelegate {
 			// There are three ways of tapping events
 			
 			// Type A
+			// Register custom key conbinations with `ReservedKeyEvent` representation
 			tapEventsWithReservedKeyEvents()
 			
 			// Type B
+			// Tap any events directly
 			//tapEvents()
 			
 			// Type C
+			// Listen for key, mouse and other events
 			//listenEvents()
 		}
 	}
@@ -52,6 +56,24 @@ class AppDelegate: NSObject, NSApplicationDelegate, EventTapperDelegate {
 	// MARK: - Type A
 	
 	private func tapEventsWithReservedKeyEvents() {
+		print(
+"""
+===================================================
+You can demonstrate the following key combinations:
+  ✓ Option Command 1
+  ✓ Command K
+  ✓ Command Esc
+  ✓ Control Command 2 (key down / key up)
+  ✓ Shift Command (detects only modifier keys)
+    Arrow keys:
+	✓ Shift Command ↓
+	✓ Shift Command ↑
+	✓ Shift Command ←
+	✓ Shift Command →
+===================================================
+"""
+		)
+		
 		tapKeyEvents(reservedKeyEvents: [
 			// Option-Command-1
 			ReservedKeyEvent(keyRepresentation: KeyRepresentation(character: "1", modifierFlags: [.option, .command])),

@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		513F1FED29B43D9100B3433E /* CGEvent+extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 513F1FEC29B43D9100B3433E /* CGEvent+extensions.swift */; };
-		5184263F2D72CC2500DEEB28 /* CGEventType+extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5184263E2D72CC2500DEEB28 /* CGEventType+extensions.swift */; };
+		5184263F2D72CC2500DEEB28 /* FlagExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5184263E2D72CC2500DEEB28 /* FlagExtensions.swift */; };
 		518426422D72DC1500DEEB28 /* CGKeyCode+extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 518426412D72DC1500DEEB28 /* CGKeyCode+extensions.swift */; };
 		51AB1AE02B38F924001850EE /* ReservedKeyEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51AB1ADF2B38F924001850EE /* ReservedKeyEvent.swift */; };
 		51AC064029AE35B700F1D838 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51AC063F29AE35B700F1D838 /* AppDelegate.swift */; };
@@ -22,7 +22,7 @@
 
 /* Begin PBXFileReference section */
 		513F1FEC29B43D9100B3433E /* CGEvent+extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CGEvent+extensions.swift"; sourceTree = "<group>"; };
-		5184263E2D72CC2500DEEB28 /* CGEventType+extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "CGEventType+extensions.swift"; path = "Sources/CGEventType+extensions.swift"; sourceTree = "<group>"; };
+		5184263E2D72CC2500DEEB28 /* FlagExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FlagExtensions.swift; path = Sources/FlagExtensions.swift; sourceTree = "<group>"; };
 		518426412D72DC1500DEEB28 /* CGKeyCode+extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CGKeyCode+extensions.swift"; sourceTree = "<group>"; };
 		51AB1ADF2B38F924001850EE /* ReservedKeyEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ReservedKeyEvent.swift; path = Sources/ReservedKeyEvent.swift; sourceTree = "<group>"; };
 		51AC063C29AE35B700F1D838 /* EventTapDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EventTapDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -47,6 +47,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		518426432D72E12400DEEB28 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				51AC066429AE3E1500F1D838 /* AccessibilityAuthorization.swift */,
+				513F1FEC29B43D9100B3433E /* CGEvent+extensions.swift */,
+				518426412D72DC1500DEEB28 /* CGKeyCode+extensions.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
 		51AC063329AE35B700F1D838 = {
 			isa = PBXGroup;
 			children = (
@@ -69,9 +79,7 @@
 			children = (
 				51AC064529AE35B800F1D838 /* Main.storyboard */,
 				51AC063F29AE35B700F1D838 /* AppDelegate.swift */,
-				51AC066429AE3E1500F1D838 /* AccessibilityAuthorization.swift */,
-				513F1FEC29B43D9100B3433E /* CGEvent+extensions.swift */,
-				518426412D72DC1500DEEB28 /* CGKeyCode+extensions.swift */,
+				518426432D72E12400DEEB28 /* Utilities */,
 				51AC064329AE35B800F1D838 /* Assets.xcassets */,
 				51AC064829AE35B800F1D838 /* EventTapDemo.entitlements */,
 			);
@@ -84,7 +92,7 @@
 				51AC065D29AE392000F1D838 /* EventTapper.swift */,
 				51AC065E29AE392000F1D838 /* EventTapWrapper.swift */,
 				51AC065F29AE392000F1D838 /* EventWatcher.swift */,
-				5184263E2D72CC2500DEEB28 /* CGEventType+extensions.swift */,
+				5184263E2D72CC2500DEEB28 /* FlagExtensions.swift */,
 				51AB1ADF2B38F924001850EE /* ReservedKeyEvent.swift */,
 			);
 			name = EventTapper;
@@ -182,7 +190,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5184263F2D72CC2500DEEB28 /* CGEventType+extensions.swift in Sources */,
+				5184263F2D72CC2500DEEB28 /* FlagExtensions.swift in Sources */,
 				513F1FED29B43D9100B3433E /* CGEvent+extensions.swift in Sources */,
 				518426422D72DC1500DEEB28 /* CGKeyCode+extensions.swift in Sources */,
 				51AB1AE02B38F924001850EE /* ReservedKeyEvent.swift in Sources */,
