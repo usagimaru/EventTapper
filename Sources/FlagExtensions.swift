@@ -21,7 +21,7 @@ public struct CGEventTypeSet: OptionSet {
 	}
 	
 	public init(_ eventType: CGEventType) {
-		self.rawValue = (1 << eventType.rawValue)
+		self.rawValue = 1 << eventType.rawValue
 	}
 	
 	public var eventMask: CGEventMask {
@@ -40,7 +40,7 @@ public extension [CGEventType] {
 
 public extension CGEventMask {
 	
-	static let trackpadEvents = 1 << 29
+	static let trackpadEvents = CGEventMask(1 << 29)
 	
 }
 
