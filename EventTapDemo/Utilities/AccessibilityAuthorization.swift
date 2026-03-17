@@ -29,7 +29,8 @@ class AccessibilityAuthorization {
 		Self.warnIfNeeded()
 		
 		let showsSystemAlert = true
-		let options = [kAXTrustedCheckOptionPrompt.takeRetainedValue(): showsSystemAlert] as CFDictionary
+		// takeRetainedValue() は参照カウントのオーナーシップを受け継ぐので、グローバル定数に対しては takeUnretainedValue() を使うのが正しい。
+		let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): showsSystemAlert] as CFDictionary
 		let result = AXIsProcessTrustedWithOptions(options)
 		return result
 	}

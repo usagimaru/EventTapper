@@ -28,7 +28,7 @@ open class EventWatcher: NSObject {
 	public static let shared = EventWatcher()
 	open weak var delegate: EventWatcherDelegate?
 	
-	public var eventWacherHandler: ((_ event: NSEvent) -> Void)?
+	public var eventWatcherHandler: ((_ event: NSEvent) -> Void)?
 	
 	private var globalMonitor: Any?
 	private var localMonitor: Any?
@@ -53,7 +53,7 @@ open class EventWatcher: NSObject {
 		stopWatching()
 		
 		func eventHandler(event: NSEvent, isGlobalEvent: Bool) {
-			self.eventWacherHandler?(event)
+			self.eventWatcherHandler?(event)
 			
 			if event.type == .keyDown {
 				self.delegate?.eventWatcherDidCatchKeyEvent?(event: event, isDown: true)

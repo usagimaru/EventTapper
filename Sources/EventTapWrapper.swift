@@ -40,6 +40,9 @@ public class EventTapWrapper {
 	private var eventHandler: EventHandler?
 	
 	private var tapOptionsOfLastTap: CGEventTapOptions?
+	private var runLoopSource: CFRunLoopSource?
+	private var attachedRunLoop: CFRunLoop?
+	private var attachedRunLoopMode: CFRunLoopMode?
 	
 	/// - Parameters:
 	///   - location: Event tapping location like `CGEventTapLocation.cghidEventTap`
@@ -83,8 +86,8 @@ public class EventTapWrapper {
 				}
 			}
 			// Evaluate 1: First evaluate whether to handle this event. If false is returned, exit without processing.
-			let shoudHandle = eventTapWrapper.evaluationHandler(eventTapWrapper, event, .shouldContinueToHandle)
-			if shoudHandle == false {
+			let shouldHandle = eventTapWrapper.evaluationHandler(eventTapWrapper, event, .shouldContinueToHandle)
+			if shouldHandle == false {
 				shouldProcess = false
 			}
 			
@@ -144,7 +147,7 @@ public class EventTapWrapper {
 		
 	private func debug_print() {
 #if DEBUG_EVENT_TAPPER
-		if let tap = self.tap {
+		if let tap {
 			print(#function, "The tap \(tap) is re-enabled.")
 		}
 		else {
@@ -154,22 +157,36 @@ public class EventTapWrapper {
 	}
 	
 	public func enableTap(_ runLoop: CFRunLoop = CFRunLoopGetCurrent(), mode: CFRunLoopMode = .commonModes) {
-		if let tap = self.tap {
-			CFRunLoopAddSource(runLoop,
-							   CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0),
-							   mode)
-			CGEvent.tapEnable(tap: tap, enable: true)
-			CFRunLoopRun()
-		}
+		guard let tap else { return }
+		
+		// Remove existing source if already attached
+		removeRunLoopSource()
+		
+		// Retain the run loop source and its associated run loop/mode so that disableTap() can remove the exact same instance later.
+		// CFMachPortCreateRunLoopSource() returns a new object each time, so passing a freshly created source to CFRunLoopRemoveSource() would fail.
+		guard let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0) else { return }
+		runLoopSource = source
+		attachedRunLoop = runLoop
+		attachedRunLoopMode = mode
+		
+		CFRunLoopAddSource(runLoop, source, mode)
+		CGEvent.tapEnable(tap: tap, enable: true)
 	}
 	
-	public func disableTap(_ runLoop: CFRunLoop = CFRunLoopGetCurrent(), mode: CFRunLoopMode = .commonModes) {
-		if let tap = self.tap {
+	public func disableTap() {
+		if let tap {
 			CGEvent.tapEnable(tap: tap, enable: false)
-			CFRunLoopRemoveSource(runLoop,
-								  CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0),
-								  mode)
 		}
+		removeRunLoopSource()
+	}
+	
+	private func removeRunLoopSource() {
+		if let attachedRunLoop, let runLoopSource, let attachedRunLoopMode {
+			CFRunLoopRemoveSource(attachedRunLoop, runLoopSource, attachedRunLoopMode)
+		}
+		runLoopSource = nil
+		attachedRunLoop = nil
+		attachedRunLoopMode = nil
 	}
 	
 }

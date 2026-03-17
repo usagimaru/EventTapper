@@ -60,9 +60,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, EventTapperDelegate {
 """
 ===================================================
 You can demonstrate the following key combinations:
-  ✓ Option Command 1
+  ✓ Command Tab (override system’s Command Tab)
   ✓ Command K
   ✓ Command Esc
+  ✓ Option Command 1
   ✓ Control Command 2 (key down / key up)
   ✓ Shift Command (detects only modifier keys)
     Arrow keys:
@@ -75,11 +76,14 @@ You can demonstrate the following key combinations:
 		)
 		
 		tapKeyEvents(reservedKeyEvents: [
-			// Option-Command-1
-			ReservedKeyEvent(keyRepresentation: KeyRepresentation(character: "1", modifierFlags: [.option, .command])),
+			// Command-Tab
+			ReservedKeyEvent(keyRepresentation: KeyRepresentation(specialKey: .tab, modifierFlags: [.command])),
 			
 			// Command-Escape
 			ReservedKeyEvent(keyRepresentation: KeyRepresentation(keyCode: CGKeyCode.escape, modifierFlags: .command)),
+			
+			// Option-Command-1
+			ReservedKeyEvent(keyRepresentation: KeyRepresentation(character: "1", modifierFlags: [.option, .command])),
 			
 			// Control-Command-2 on key down / key up
 			ReservedKeyEvent(tappingPoint: .keyDown, keyRepresentation: KeyRepresentation(character: "2", modifierFlags: [.control, .command])),

@@ -1,5 +1,5 @@
 //
-//  EventWatcher.swift
+//  EventTapper.swift
 //
 //  Created by usagimaru on 2023.02.27.
 //  Copyright © 2023 usagimaru.
@@ -53,8 +53,8 @@ open class EventTapper: NSObject {
 		{ eventTapWrapper, event, evaluationFunction in
 			evaluationHandler(event, evaluationFunction)
 			
-		} eventHandler: { eventTapWrapper, event in
-			guard let nsevent = NSEvent(cgEvent: event)
+		} eventHandler: { [weak self] eventTapWrapper, event in
+			guard let nsevent = NSEvent(cgEvent: event), let self
 			else { return }
 			
 			let tapIdentifier = eventTapWrapper.identifier
