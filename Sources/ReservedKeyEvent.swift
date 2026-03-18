@@ -13,7 +13,7 @@ public struct ReservedKeyEvent {
 		case keyUp
 		case flagsChanged
 		
-		func eventType() -> CGEventType {
+		public func eventType() -> CGEventType {
 			switch self {
 				case .keyDown: .keyDown
 				case .keyUp: .keyUp
@@ -22,9 +22,9 @@ public struct ReservedKeyEvent {
 		}
 	}
 	
-	private(set) var tappingPoint: TappingPoint = .keyDown
-	private(set) var keyRepresentation: KeyRepresentation?
-	private(set) var customEvaluator: ((_ nsevent: NSEvent) -> Bool)?
+	public private(set) var tappingPoint: TappingPoint = .keyDown
+	public private(set) var keyRepresentation: KeyRepresentation?
+	public private(set) var customEvaluator: ((_ nsevent: NSEvent) -> Bool)?
 	
 	/// With KeyRepresentation
 	public init(tappingPoint: TappingPoint = .keyDown, keyRepresentation: KeyRepresentation) {
@@ -45,11 +45,16 @@ public struct ReservedKeyEvent {
 	}
 	
 	public func evaluate(with event: NSEvent) -> Bool {
+		// Filter by tappingPoint so that only the expected event type is evaluated.
+		guard event.cgEvent?.type == tappingPoint.eventType() else {
+			return false
+		}
+		
 		if let customEvaluator {
 			return customEvaluator(event)
 		}
 		
-		if let keyRepresentation, event.cgEvent?.type == tappingPoint.eventType() {
+		if let keyRepresentation {
 			switch keyRepresentation.type() {
 				case .character:
 					if let character = keyRepresentation.character, event.type != .flagsChanged {
@@ -88,11 +93,11 @@ public struct KeyRepresentation {
 		case modifiers
 	}
 	
-	private(set) var character: String?
-	private(set) var keyCode: CGKeyCode?
-	private(set) var specialKey: NSEvent.SpecialKey?
-	private(set) var modifierFlags: NSEvent.ModifierFlags?
-	private(set) var onlyModifiers: Bool = false
+	public private(set) var character: String?
+	public private(set) var keyCode: CGKeyCode?
+	public private(set) var specialKey: NSEvent.SpecialKey?
+	public private(set) var modifierFlags: NSEvent.ModifierFlags?
+	public private(set) var onlyModifiers: Bool = false
 	
 	/// Keyboard character with modifier flags
 	public init(character: String, modifierFlags: NSEvent.ModifierFlags?) {
