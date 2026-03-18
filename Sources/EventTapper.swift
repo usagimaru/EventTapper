@@ -8,22 +8,79 @@
 #if os(macOS)
 import Cocoa
 
-@objc public protocol EventTapperDelegate: AnyObject {
-	
-	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchFlagsChanged event: NSEvent, tapIdentifier: EventTapWrapper.EventTapID)
-	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchKeyEvent event: NSEvent, isDown: Bool, tapIdentifier: EventTapWrapper.EventTapID)
-	
-	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchLeftMouseClick event: NSEvent, isDown: Bool, tapIdentifier: EventTapWrapper.EventTapID)
-	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchLeftMouseDragging event: NSEvent, tapIdentifier: EventTapWrapper.EventTapID)
-	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchRightMouseClick event: NSEvent, isDown: Bool, tapIdentifier: EventTapWrapper.EventTapID)
-	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchRightMouseDragging event: NSEvent, tapIdentifier: EventTapWrapper.EventTapID)
-	
-	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchMouseMoving event: NSEvent, tapIdentifier: EventTapWrapper.EventTapID)
-	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchAnyEvent event: NSEvent, tapIdentifier: EventTapWrapper.EventTapID)
-	
-}
+/*
+ ## Classes
+ 
+ ✓ EventTapper:
+   A high-level, delegate-based class for intercepting system events via CGEventTap.
+ 
+ ✓ EventTapWrapper:
+   A low-level wrapper that manages the CGEventTap lifecycle
+   (C callback bridge, run loop source, two-phase evaluation).
+ 
+ ✓ ReservedKeyEvent:
+   A declarative definition of a key combination or condition to intercept.
+   Used with `keyTap(reservedKeyEvents:)` to match specific key events.
 
-/// A high-level wrapper class for EventTapWrapper
+ `EventTapper` wraps `EventTapWrapper` and adds a delegate-driven interface on top of it.
+ Raw CGEvents are automatically converted to NSEvent and dispatched to
+ `EventTapperDelegate` methods categorized by event type (key, mouse, flags, etc.).
+
+ Two tapping methods are available depending on the level of control you need:
+
+ - `tap(for:evaluationHandler:)` — General-purpose tap. You specify an event mask and
+   provide an `evaluationHandler` that decides per-event whether to handle and/or block it.
+
+ - `keyTap(reservedKeyEvents:)` — Convenience for intercepting specific key combinations.
+   Pass an array of `ReservedKeyEvent` definitions; matching is handled internally.
+
+ The class also provides static methods for posting simulated key and mouse events.
+
+ ## Usage Examples
+
+ ### Intercept specific key combinations with `keyTap`
+ ```
+ let tapper = EventTapper()
+ tapper.delegate = self
+ tapper.keyTap(reservedKeyEvents: [
+     // Command-Tab (override system behavior)
+     ReservedKeyEvent(keyRepresentation: KeyRepresentation(specialKey: .tab, modifierFlags: [.command])),
+     // Option-Command-1
+     ReservedKeyEvent(keyRepresentation: KeyRepresentation(character: "1", modifierFlags: [.option, .command])),
+     // Detect modifier-only press (Shift-Command)
+     ReservedKeyEvent(keyRepresentation: KeyRepresentation(onlyModifierFlags: [.command, .shift])),
+     // Custom evaluation (Command-K)
+     ReservedKeyEvent(customEvaluator: { event in
+         event.type == .keyDown && event.modifierFlags.contains(.command) && event.charactersIgnoringModifiers == "k"
+     }),
+ ])
+ ```
+
+ ### General-purpose tap with `evaluationHandler`
+ ```
+ let tapper = EventTapper()
+ tapper.delegate = self
+ tapper.tap(for: [.keyDown, .flagsChanged]) { event, evaluationFunction in
+     guard let nsevent = NSEvent(cgEvent: event) else { return false }
+     // Return true to handle and/or block the event
+     return nsevent.modifierFlags.contains(.command) && nsevent.charactersIgnoringModifiers == "d"
+ }
+ ```
+
+ ### Passive listening (listen only, no blocking)
+ ```
+ let tapper = EventTapper()
+ tapper.delegate = self
+ tapper.tap(for: [.keyDown, .keyUp, .leftMouseDown],
+            tapOptions: .listenOnly) { event, _ in
+     // Events are never blocked in listenOnly mode
+     return true
+ }
+ ```
+
+ - Note: Requires macOS Accessibility permission. Use `AccessibilityAuthorization` to check/request it.
+*/
+
 open class EventTapper: NSObject {
 	
 	public weak var delegate: EventTapperDelegate?
@@ -36,6 +93,22 @@ open class EventTapper: NSObject {
 		}
 	}
 	
+	/// Start tapping events matching the given event mask.
+	///
+	/// - Parameters:
+	///   - eventMask: A bitmask of CGEventType values to intercept.
+	///   - location: Where in the event stream to insert the tap. Defaults to `.cghidEventTap`.
+	///   - placement: Whether to insert at the head or tail of existing taps.
+	///   - tapOptions: `.defaultTap` to actively filter events, or `.listenOnly` for passive observation.
+	///   - setup: Optional closure called with the underlying `EventTapWrapper` before the tap starts.
+	///   - evaluationHandler: Called for each event with two evaluation phases.
+	///     The meaning of the returned `Bool` depends on the `EvaluationFunction`:
+	///     - `.shouldContinueToHandle`: Return `true` to pass the event to `EventHandler` and delegate methods.
+	///       Return `false` to skip handling entirely.
+	///     - `.shouldStopDispatchingToSystem`: Return `true` to consume the event (not dispatched to the system).
+	///       Return `false` to let the event pass through to the system normally.
+	///       This phase is only evaluated when `tapOptions` is `.defaultTap`.
+	/// - Returns: The tap identifier, or `nil` if the tap could not be created.
 	@discardableResult
 	open func tap(for eventMask: CGEventMask,
 				  location: CGEventTapLocation = .cghidEventTap,
@@ -104,6 +177,7 @@ open class EventTapper: NSObject {
 		return tapWrapper?.identifier
 	}
 	
+	/// Convenience overload that accepts an array of `CGEventType` instead of a raw bitmask.
 	@discardableResult
 	open func tap(for eventTypes: [CGEventType],
 				  location: CGEventTapLocation = .cghidEventTap,
@@ -119,6 +193,15 @@ open class EventTapper: NSObject {
 			evaluationHandler: evaluationHandler)
 	}
 	
+	/// Start tapping key events that match the given `ReservedKeyEvent` definitions.
+	///
+	/// Automatically listens for `.keyDown`, `.keyUp`, and `.flagsChanged` events.
+	/// Each incoming event is tested against the `reservedKeyEvents` array in order;
+	/// the first match determines whether the event is handled and/or blocked from the system.
+	///
+	/// - Parameters:
+	///   - reservedKeyEvents: An array of key event definitions to match. See `ReservedKeyEvent` for details.
+	/// - Returns: The tap identifier, or `nil` if the tap could not be created.
 	@discardableResult
 	open func keyTap(location: CGEventTapLocation = .cghidEventTap,
 					 placement: CGEventTapPlacement = .headInsertEventTap,
@@ -158,7 +241,7 @@ open class EventTapper: NSObject {
 }
 
 
-// MARK: -
+// MARK: - Event Simulation
 
 public extension EventTapper {
 	
@@ -210,6 +293,28 @@ public extension EventTapper {
 		postMouseButtonEvent(mouseType: .rightMouseDown, mouseButton: .right)
 		postMouseButtonEvent(mouseType: .rightMouseUp, mouseButton: .right)
 	}
+	
+}
+
+
+// MARK: - EventTapperDelegate
+
+/// Delegate protocol for receiving categorized events from `EventTapper`.
+///
+/// All methods are optional. Implement only the event types you need to observe.
+/// Every matched event also triggers `eventTapper(_:didCatchAnyEvent:tapIdentifier:)`.
+@objc public protocol EventTapperDelegate: AnyObject {
+	
+	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchFlagsChanged event: NSEvent, tapIdentifier: EventTapWrapper.EventTapID)
+	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchKeyEvent event: NSEvent, isDown: Bool, tapIdentifier: EventTapWrapper.EventTapID)
+	
+	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchLeftMouseClick event: NSEvent, isDown: Bool, tapIdentifier: EventTapWrapper.EventTapID)
+	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchLeftMouseDragging event: NSEvent, tapIdentifier: EventTapWrapper.EventTapID)
+	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchRightMouseClick event: NSEvent, isDown: Bool, tapIdentifier: EventTapWrapper.EventTapID)
+	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchRightMouseDragging event: NSEvent, tapIdentifier: EventTapWrapper.EventTapID)
+	
+	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchMouseMoving event: NSEvent, tapIdentifier: EventTapWrapper.EventTapID)
+	@objc optional func eventTapper(_ eventTapper: EventTapper, didCatchAnyEvent event: NSEvent, tapIdentifier: EventTapWrapper.EventTapID)
 	
 }
 

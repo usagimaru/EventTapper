@@ -91,9 +91,9 @@
 			children = (
 				51AC065D29AE392000F1D838 /* EventTapper.swift */,
 				51AC065E29AE392000F1D838 /* EventTapWrapper.swift */,
-				51AC065F29AE392000F1D838 /* EventWatcher.swift */,
-				5184263E2D72CC2500DEEB28 /* FlagExtensions.swift */,
 				51AB1ADF2B38F924001850EE /* ReservedKeyEvent.swift */,
+				5184263E2D72CC2500DEEB28 /* FlagExtensions.swift */,
+				51AC065F29AE392000F1D838 /* EventWatcher.swift */,
 			);
 			name = EventTapper;
 			sourceTree = "<group>";

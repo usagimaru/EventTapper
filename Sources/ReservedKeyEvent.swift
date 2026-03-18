@@ -6,6 +6,35 @@
 
 import Cocoa
 
+/// Defines a specific key event to intercept with `EventTapper.keyTap()`.
+///
+/// Each instance represents a single key combination or condition to match against incoming events.
+/// Pass an array of `ReservedKeyEvent` to `EventTapper.keyTap(reservedKeyEvents:)` to intercept
+/// matching events and optionally prevent them from being dispatched to the system.
+///
+/// There are two ways to define a matching condition:
+///
+/// 1. **KeyRepresentation** — Match by character, key code, special key, or modifier flags:
+///    ```
+///    // Match Command-Tab by character
+///    ReservedKeyEvent(keyRepresentation: KeyRepresentation(character: "\t", modifierFlags: .command))
+///
+///    // Match arrow key by key code
+///    ReservedKeyEvent(keyRepresentation: KeyRepresentation(keyCode: .leftArrow, modifierFlags: nil))
+///
+///    // Match modifier-only (e.g. Option key press)
+///    ReservedKeyEvent(keyRepresentation: KeyRepresentation(onlyModifierFlags: .option))
+///    ```
+///
+/// 2. **Custom evaluator** — Provide a closure for arbitrary matching logic:
+///    ```
+///    ReservedKeyEvent(tappingPoint: .keyDown) { event in
+///        event.keyCode == 0x31 // space bar
+///    }
+///    ```
+///
+/// The `tappingPoint` determines which event phase (keyDown, keyUp, flagsChanged) this instance
+/// responds to. Events of other types are filtered out before evaluation.
 public struct ReservedKeyEvent {
 	
 	public enum TappingPoint {
@@ -83,6 +112,13 @@ public struct ReservedKeyEvent {
 	
 }
 
+/// Represents a key or modifier combination to match against an NSEvent.
+///
+/// Use one of the designated initializers to specify the matching strategy:
+/// - `init(character:modifierFlags:)` — Match by keyboard character (e.g. "a", "\t")
+/// - `init(keyCode:modifierFlags:)` — Match by CGKeyCode value
+/// - `init(specialKey:modifierFlags:)` — Match by NSEvent.SpecialKey
+/// - `init(onlyModifierFlags:)` — Match modifier key presses only (automatically sets tappingPoint to `.flagsChanged`)
 public struct KeyRepresentation {
 	
 	public enum RepresentationType {

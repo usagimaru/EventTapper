@@ -15,7 +15,52 @@
 import Cocoa
 
 
-/// A low-level wrapper for CGEventTap
+/// A low-level wrapper around `CGEvent.tapCreate()` that manages the lifecycle of a CGEventTap.
+///
+/// This class handles:
+/// - Creating a CGEventTap with a C callback bridge
+/// - Attaching/detaching the tap's run loop source
+/// - Automatic re-enabling when the tap is disabled by timeout or user input
+/// - Two-phase event evaluation via `EvaluationHandler`
+///
+/// ## Event Processing Flow
+///
+/// When an event arrives, the callback performs the following steps:
+///
+/// 1. **Auto re-enable** — If the tap was disabled by timeout or user input,
+///    it is automatically re-enabled (controlled by `activatesTapAtTimeoutAutomatically`
+///    and `activatesTapAtUserInputAutomatically`).
+///
+/// 2. **Evaluate 1 (`.shouldContinueToHandle`)** — The `EvaluationHandler` is called to decide
+///    whether this event should be processed. Return `false` to skip.
+///
+/// 3. **Evaluate 2 (`.shouldStopDispatchingToSystem`)** — Only when `tapOptions` is `.defaultTap`.
+///    Return `true` to consume the event (prevent it from reaching the system).
+///
+/// 4. **Handle** — The `EventHandler` is called with the event.
+///
+/// 5. **Dispatch** — If not consumed, the event is passed through to the system.
+///
+/// ## Usage
+///
+/// Typically used indirectly through `EventTapper`, but can be used standalone:
+/// ```
+/// let tap = EventTapWrapper(
+///     location: .cghidEventTap,
+///     placement: .headInsertEventTap,
+///     tapOptions: .defaultTap,
+///     eventTypes: [.keyDown, .keyUp],
+///     evaluationHandler: { wrapper, event, phase in
+///         // return true/false based on phase
+///     },
+///     eventHandler: { wrapper, event in
+///         // process the event
+///     }
+/// )
+/// tap?.enableTap()
+/// ```
+///
+/// - Important: Requires macOS Accessibility permission for most event tap locations.
 public class EventTapWrapper {
 	
 	/// Evaluation types for `EvaluationHandler`
@@ -30,7 +75,11 @@ public class EventTapWrapper {
 	public typealias EvaluationHandler = (EventTapWrapper, CGEvent, EvaluationFunction) -> Bool
 	public typealias EventHandler = (EventTapWrapper, CGEvent) -> ()
 	
+	/// If `true`, the tap is automatically re-enabled when the system disables it due to timeout.
+	/// This can happen when the callback takes too long to return.
 	public var activatesTapAtTimeoutAutomatically: Bool = true
+	
+	/// If `true`, the tap is automatically re-enabled when the system disables it due to user input.
 	public var activatesTapAtUserInputAutomatically: Bool = true
 	
 	public private(set) var identifier: EventTapID = UUID()
@@ -131,6 +180,7 @@ public class EventTapWrapper {
 		self.tap = tap
 	}
 	
+	/// Convenience initializer that accepts an array of `CGEventType` instead of a raw bitmask.
 	public convenience init?(location: CGEventTapLocation,
 							 placement: CGEventTapPlacement,
 							 tapOptions: CGEventTapOptions,
@@ -156,6 +206,11 @@ public class EventTapWrapper {
 #endif
 	}
 	
+	/// Attach the tap to a run loop and enable it.
+	///
+	/// - Parameters:
+	///   - runLoop: The run loop to attach to. Defaults to the current thread's run loop.
+	///   - mode: The run loop mode. Defaults to `.commonModes`.
 	public func enableTap(_ runLoop: CFRunLoop = CFRunLoopGetCurrent(), mode: CFRunLoopMode = .commonModes) {
 		guard let tap else { return }
 		
@@ -173,6 +228,7 @@ public class EventTapWrapper {
 		CGEvent.tapEnable(tap: tap, enable: true)
 	}
 	
+	/// Disable the tap and detach it from the run loop.
 	public func disableTap() {
 		if let tap {
 			CGEvent.tapEnable(tap: tap, enable: false)
